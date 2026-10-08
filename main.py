@@ -95,7 +95,7 @@ def verify_and_update_successes(scraper, feeder, engine):
         try:
             verified_successes.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
             top_successes = verified_successes[:8]
-            requests.put(f"{FIREBASE_DATABASE_URL}/completed_successes.json", json=top_successes, timeout=5)
+            requests.put(f"{FIREBASE_DATABASE_URL}/completed_successes.json?auth={FIREBASE_SECRET}", json=top_successes, timeout=5)
             print(f"-> Başarı Vitrini Güncellendi: {len(top_successes)} adet tescilli kupa/lig maçı eklendi.")
         except Exception:
             pass
