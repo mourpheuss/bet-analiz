@@ -5,7 +5,7 @@ from firebase_sync import FirebaseSync
 import requests
 
 FIREBASE_DATABASE_URL = "https://analizsepeti-f3bb5-default-rtdb.firebaseio.com"
-
+FIREBASE_SECRET = "mZUATfv3TJqO6Ap8d1asrXemQIYqJflfYLzprmBS"
 def verify_and_update_successes(scraper, feeder, engine):
     print("-> Biten kupa ve lig maçları taranıyor...")
     verified_successes = []
