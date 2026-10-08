@@ -1,11 +1,14 @@
 import requests
 
+FIREBASE_SECRET = "mZUATfv3TJqO6Ap8d1asrXemQIYqJflfYLzprmBS"
+
 class FirebaseSync:
     def __init__(self, database_url):
         self.database_url = database_url.rstrip('/')
 
     def push_analyzed_matches(self, matches):
-        endpoint = f"{self.database_url}/analyzed_matches.json"
+        # Gizli anahtar ile doğrudan admin yetkisiyle yazıyoruz (401 imkansız hale gelir)
+        endpoint = f"{self.database_url}/analyzed_matches.json?auth={FIREBASE_SECRET}"
         try:
             res = requests.put(endpoint, json=matches, timeout=15)
             if res.status_code == 200:
