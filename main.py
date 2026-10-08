@@ -4,7 +4,7 @@ from engine import SportsAnalyticsEngine
 from firebase_sync import FirebaseSync
 import requests
 
-FIREBASE_DATABASE_URL = "https://mineora-web-default-rtdb.firebaseio.com"
+FIREBASE_DATABASE_URL = "https://analizsepeti-f3bb5-default-rtdb.firebaseio.com"
 
 def verify_and_update_successes(scraper, feeder, engine):
     print("-> Biten kupa ve lig maçları taranıyor...")
