@@ -30,11 +30,24 @@
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            background-color: var(--bg-deep);
-            color: var(--text-pure);
-            font-family: var(--font-main);
-            min-height: 100vh;
-        }
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #e2e8f0;
+    background-color: #070c0e;
+    
+    /* 1. Köşelerden vuran stadyum projektörleri ve yeşil çim ışıltısı */
+    /* 2. Arka plana gömülü transparan futbol sahası & taktik çizgileri (SVG) */
+    background-image: 
+        radial-gradient(circle at 10% 8%, rgba(0, 230, 118, 0.14) 0%, transparent 35%),
+        radial-gradient(circle at 90% 12%, rgba(0, 180, 216, 0.10) 0%, transparent 35%),
+        radial-gradient(circle at 50% 100%, rgba(13, 148, 136, 0.12) 0%, transparent 50%),
+        url("data:image/svg+xml,%3Csvg width='180' height='180' viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M90 0 v180 M0 90 h180' stroke='rgba(0,230,118,0.04)' stroke-width='1.5' fill='none'/%3E%3Ccircle cx='90' cy='90' r='42' stroke='rgba(0,230,118,0.04)' stroke-width='1.5' fill='none'/%3E%3Ccircle cx='90' cy='90' r='3' fill='rgba(0,230,118,0.05)'/%3E%3Crect x='10' y='10' width='160' height='160' rx='12' stroke='rgba(0,230,118,0.03)' stroke-width='1' fill='none'/%3E%3C/svg%3E");
+    
+    background-attachment: fixed;
+    background-repeat: repeat;
+}
 
         .container { max-width: 1260px; margin: 0 auto; padding: 1.5rem; }
         .hidden { display: none !important; }
