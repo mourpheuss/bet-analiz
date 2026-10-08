@@ -129,6 +129,16 @@ def run_scientific_pipeline():
                     result["away_score"] = enriched_match.get("away_score", 0)
                     result["home_reds"] = enriched_match.get("home_reds", 0)
                     result["away_reds"] = enriched_match.get("away_reds", 0)
+                    result["home_score"] = enriched_match.get("home_score", 0)
+                    result["away_score"] = enriched_match.get("away_score", 0)
+                    result["home_reds"] = enriched_match.get("home_reds", 0)
+                    result["away_reds"] = enriched_match.get("away_reds", 0)
+
+                    # --- LİG SIRALAMALARI (Frontend'in beklediği alanlar) ---
+                    result["home_rank"] = enriched_match.get("home_rank", enriched_match.get("home_pos", None))
+                    result["away_rank"] = enriched_match.get("away_rank", enriched_match.get("away_pos", None))
+
+                    analyzed_matches.append(result)
 
                     analyzed_matches.append(result)
                 except Exception:
