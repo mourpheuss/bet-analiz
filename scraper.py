@@ -86,20 +86,51 @@ class BulletinScraper:
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
         }
 
-    def _fetch_single_league(self, league_name, league_slug, now_tsi, max_date_tsi):
-        league_matches = []
-        url = f"https://site.api.espn.com/apis/site/v2/sports/soccer/{league_slug}/scoreboard"
-        try:
-            res = requests.get(url, headers=self.headers, timeout=5)
-            if res.status_code != 200:
-                return league_matches
+    def _parse_event_date(self, raw_date):
+        """Farklı ISO tarih formatlarını TSİ (UTC+3) olarak hatasız parse eder."""
+        if not raw_date:
+            return None
+        
+        # 1. Standart format denemeleri
+        for fmt in ("%Y-%m-%dT%H:%MZ", "%Y-%m-%dT%H:%M:%SZ", "%Y-%m-%dT%H:%M:%S.%fZ"):
+            try:
+                dt_utc = datetime.strptime(raw_date, fmt)
+                return dt_utc + timedelta(hours=3)
+            except ValueError:
+                continue
 
-            events = res.json().get("events", [])
+        # 2. ISO Fallback
+        try:
+            clean_date = raw_date.replace("Z", "+00:00")
+            dt_obj = datetime.fromisoformat(clean_date)
+            return dt_obj.replace(tzinfo=None) + timedelta(hours=3)
+        except Exception:
+            return None
+
+    def _fetch_single_league(self, league_name, league_slug, now_tsi, max_date_tsi, date_range_param):
+        league_matches = []
+        # ESPN API'sine açık tarih aralığı ve yüksek limit veriyoruz
+        url = f"https://site.api.espn.com/apis/site/v2/sports/soccer/{league_slug}/scoreboard?dates={date_range_param}&limit=100"
+        
+        try:
+            res = requests.get(url, headers=self.headers, timeout=6)
+            events = []
+            if res.status_code == 200:
+                events = res.json().get("events", [])
+            
+            # Eğer tarih aralığı ile boş döndüyse varsayılan endpoint'e fallback yap
+            if not events:
+                fallback_url = f"https://site.api.espn.com/apis/site/v2/sports/soccer/{league_slug}/scoreboard"
+                res_fb = requests.get(fallback_url, headers=self.headers, timeout=6)
+                if res_fb.status_code == 200:
+                    events = res_fb.json().get("events", [])
+
             for ev in events:
                 status_obj = ev.get("status", {})
                 type_obj = status_obj.get("type", {})
                 state = type_obj.get("state", "pre")
 
+                # Tamamlanmış maçları aktif bültenden çıkar
                 if type_obj.get("completed", False) or state == "post":
                     continue
 
@@ -116,16 +147,15 @@ class BulletinScraper:
                 if not home or not away:
                     continue
 
-                raw_date = ev.get("date", "")
-                try:
-                    dt_utc = datetime.strptime(raw_date, "%Y-%m-%dT%H:%MZ")
-                    dt_tsi = dt_utc + timedelta(hours=3)
-                except Exception:
+                dt_tsi = self._parse_event_date(ev.get("date", ""))
+                if not dt_tsi:
                     continue
 
+                # Başlama saati 3 saatten fazla geçmiş ve hala başlamamış maçları atla
                 if state == "pre" and dt_tsi < (now_tsi - timedelta(hours=3)):
                     continue
 
+                # Belirlenen maksimum süreden (4 gün) sonrasını dahil etme
                 if state == "pre" and dt_tsi > max_date_tsi:
                     continue
 
@@ -173,9 +203,14 @@ class BulletinScraper:
         now_tsi = now_utc + timedelta(hours=3)
         max_date_tsi = now_tsi + timedelta(days=4)
 
+        # Bugünü ve sonraki 4 günü kapsayacak tarih parametresi (YYYYMMDD-YYYYMMDD)
+        start_date_str = (now_tsi - timedelta(days=1)).strftime("%Y%m%d")
+        end_date_str = max_date_tsi.strftime("%Y%m%d")
+        date_range_param = f"{start_date_str}-{end_date_str}"
+
         with ThreadPoolExecutor(max_workers=12) as executor:
             future_to_league = {
-                executor.submit(self._fetch_single_league, name, slug, now_tsi, max_date_tsi): name
+                executor.submit(self._fetch_single_league, name, slug, now_tsi, max_date_tsi, date_range_param): name
                 for name, slug in self.leagues.items()
             }
             for future in as_completed(future_to_league):
@@ -186,6 +221,7 @@ class BulletinScraper:
                 except Exception:
                     pass
 
+        # Canlı maçlar en üste, ardından başlama saatine göre sıralama
         all_matches.sort(key=lambda x: (not x["is_live"], x["start_time"]))
         print(f"-> Global Kupa ve Lig Taraması Tamamlandı: Toplam {len(all_matches)} karşılaşma hazırlandı.")
         return all_matches
