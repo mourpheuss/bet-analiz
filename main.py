@@ -6,6 +6,7 @@ import requests
 
 FIREBASE_DATABASE_URL = "https://analizsepeti-f3bb5-default-rtdb.firebaseio.com"
 FIREBASE_SECRET = "mZUATfv3TJqO6Ap8d1asrXemQIYqJflfYLzprmBS"
+
 def verify_and_update_successes(scraper, feeder, engine):
     print("-> Biten kupa ve lig maçları taranıyor...")
     verified_successes = []
@@ -111,7 +112,25 @@ def run_scientific_pipeline():
 
     try:
         raw_matches = scraper.fetch_live_bulletin()
-        print(f"-> Toplam {len(raw_matches)} aktif ve kupa maçı toplandı.")
+        print(f"-> Kaynaktan çekilen ham kayıt: {len(raw_matches)}")
+
+        # --- MAÇ TEKİLLEŞTİRME (ÇİFTLEME ENGELLEYİCİ) ---
+        seen_keys = set()
+        deduped_matches = []
+        for match in raw_matches:
+            m_id = str(match.get("match_id", "")).strip()
+            h_team = str(match.get("home_team", "")).strip().lower()
+            a_team = str(match.get("away_team", "")).strip().lower()
+            
+            # match_id varsa ve generic değilse onu, yoksa takımları anahtar yapıyoruz
+            unique_key = m_id if (m_id and m_id != "40100") else f"{h_team}_vs_{a_team}"
+            
+            if unique_key not in seen_keys:
+                seen_keys.add(unique_key)
+                deduped_matches.append(match)
+
+        raw_matches = deduped_matches
+        print(f"-> Tekilleştirme tamamlandı: Toplam {len(raw_matches)} benzersiz karşılaşma işleniyor.")
 
         if raw_matches:
             analyzed_matches = []
@@ -120,7 +139,8 @@ def run_scientific_pipeline():
                     enriched_match = feeder.enrich_match_data(match)
                     result = engine.analyze_match(enriched_match)
                     
-                   result["match_id"] = enriched_match.get("match_id", "40100")
+                    # Temel Karşılaşma Bilgileri
+                    result["match_id"] = enriched_match.get("match_id", "40100")
                     result["date"] = enriched_match.get("start_time", "")
                     result["league"] = enriched_match.get("league", "Futbol")
                     result["is_live"] = enriched_match.get("is_live", False)
@@ -129,27 +149,38 @@ def run_scientific_pipeline():
                     result["away_score"] = enriched_match.get("away_score", 0)
                     result["home_reds"] = enriched_match.get("home_reds", 0)
                     result["away_reds"] = enriched_match.get("away_reds", 0)
+                    result["home_team"] = enriched_match.get("home_team", result.get("home_team", ""))
+                    result["away_team"] = enriched_match.get("away_team", result.get("away_team", ""))
 
-                    # --- LİG SIRASI, PUAN VE FORM VERİLERİ ---
-                    result["home_stats"] = enriched_match.get("home_stats", {})
-                    result["away_stats"] = enriched_match.get("away_stats", {})
-                    result["home_rank"] = enriched_match.get("home_rank", "-")
-                    result["away_rank"] = enriched_match.get("away_rank", "-")
+                    # --- LİG SIRASI, PUAN VE FORM VERİLERİ (FRONTEND İÇİN) ---
+                    h_rank = enriched_match.get("home_rank", "-")
+                    a_rank = enriched_match.get("away_rank", "-")
+
+                    result["home_rank"] = h_rank
+                    result["away_rank"] = a_rank
+                    result["home_pos"] = h_rank
+                    result["away_pos"] = a_rank
                     result["home_points"] = enriched_match.get("home_points", "-")
                     result["away_points"] = enriched_match.get("away_points", "-")
                     result["home_form"] = enriched_match.get("home_form", [])
                     result["away_form"] = enriched_match.get("away_form", [])
+                    result["home_stats"] = enriched_match.get("home_stats", {})
+                    result["away_stats"] = enriched_match.get("away_stats", {})
+
+                    # Arayüzün beklediği hazır metin etiketi
+                    if str(h_rank) not in ["-", "Kupa"] and str(a_rank) not in ["-", "Kupa"]:
+                        rank_str = f"#{h_rank} vs #{a_rank}"
+                    elif h_rank == "Kupa" or a_rank == "Kupa":
+                        rank_str = "Kupa"
+                    else:
+                        rank_str = "Fikstür"
+
+                    result["league_rank"] = rank_str
+                    result["standing"] = rank_str
+                    result["rank_display"] = rank_str
 
                     analyzed_matches.append(result)
-
-                    # --- LİG SIRALAMALARI (Frontend'in beklediği alanlar) ---
-                    result["home_rank"] = enriched_match.get("home_rank", enriched_match.get("home_pos", None))
-                    result["away_rank"] = enriched_match.get("away_rank", enriched_match.get("away_pos", None))
-
-                    analyzed_matches.append(result)
-
-                    analyzed_matches.append(result)
-                except Exception:
+                except Exception as err:
                     continue
 
             fb = FirebaseSync(FIREBASE_DATABASE_URL)
