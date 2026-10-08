@@ -73,10 +73,6 @@ class StatsFeeder:
         if "serie a" in l_low: return "ita.1"
         if "serie b" in l_low: return "ita.2"
         if "bundesliga" in l_low: return "ger.2" if "2" in l_low else "ger.1"
-        if "ligue 1" in l_low: return "fra.1"
-        if "ligue 2" in l_low: return "fra.2"
-        if "eredivisie" in l_low: return "ned.1"
-        if "mls" in l_low: return "usa.1"
         return None
 
     def fetch_league_standings(self, league_name):
@@ -87,11 +83,11 @@ class StatsFeeder:
         if not slug:
             return {}
 
-        url = f"https://site.api.espn.com/apis/v2/sports/soccer/{slug}/standings"
+        url = f"https://site.web.api.espn.com/apis/v2/sports/soccer/{slug}/standings"
         table = {}
 
         try:
-            res = requests.get(url, headers=self.headers, timeout=6)
+            res = requests.get(url, headers=self.headers, timeout=5)
             if res.status_code == 200:
                 data = res.json()
                 entries = []
@@ -147,88 +143,61 @@ class StatsFeeder:
 
         return table
 
-    def _find_team_in_table(self, team_name, table):
-        norm = self._normalize(team_name)
-        if not norm or not table:
-            return None
-        if norm in table:
-            return table[norm]
+    def _find_team(self, name, table):
+        norm = self._normalize(name)
+        if not norm or not table: return None
+        if norm in table: return table[norm]
         for k, v in table.items():
-            if len(norm) >= 4 and (norm in k or k in norm):
-                return v
-            if len(k) >= 4 and (k in norm or norm in k):
-                return v
+            if len(norm) >= 4 and (norm in k or k in norm): return v
+            if len(k) >= 4 and (k in norm or norm in k): return v
         return None
 
     def _generate_dynamic_fallback_xg(self, home_team, away_team):
         h_hash = sum(ord(c) for c in home_team) % 50
         a_hash = sum(ord(c) for c in away_team) % 50
-        h_xg = round(1.25 + (h_hash * 0.022), 2)
-        a_xg = round(0.90 + (a_hash * 0.020), 2)
-        return h_xg, a_xg
+        return round(1.25 + (h_hash * 0.022), 2), round(0.90 + (a_hash * 0.020), 2)
 
     def enrich_match_data(self, match):
         league = match.get("league", "")
         home_team = match.get("home_team", "")
         away_team = match.get("away_team", "")
 
-        is_cup = any(w in league.lower() for w in ["kupa", "cup", "trophy", "pokal", "copa", "beker", "taça", "nations", "friendly", "elemeleri"])
+        is_cup = any(w in league.lower() for w in ["kupa", "cup", "trophy", "pokal", "copa", "beker", "taça", "nations", "friendly"])
         table = self.fetch_league_standings(league)
 
-        h_data = self._find_team_in_table(home_team, table)
-        a_data = self._find_team_in_table(away_team, table)
+        h_data = self._find_team(home_team, table)
+        a_data = self._find_team(away_team, table)
 
-        # Ev Sahibi Verileri
+        # Sıralama ve Form Belirleme
         if h_data:
-            h_rank = h_data["rank"]
-            h_points = h_data["points"]
-            h_form = h_data["form"]
-            h_scored = float(h_data["avg_scored"])
-            h_conceded = float(h_data["avg_conceded"])
+            h_rank, h_points, h_form = h_data["rank"], h_data["points"], h_data["form"]
+            h_scored, h_conceded = float(h_data["avg_scored"]), float(h_data["avg_conceded"])
         else:
-            h_rank = "Kupa" if is_cup else ((sum(ord(c) for c in home_team) % 18) + 1)
+            h_rank = "Kupa" if is_cup else ((sum(ord(c) for c in home_team) % 16) + 1)
             h_points = 18 if not is_cup else "-"
             h_form = ["G", "B", "M", "G", "B"]
-            h_scored = 1.35
-            h_conceded = 1.15
+            h_scored, h_conceded = 1.35, 1.15
 
-        # Deplasman Verileri
         if a_data:
-            a_rank = a_data["rank"]
-            a_points = a_data["points"]
-            a_form = a_data["form"]
-            a_scored = float(a_data["avg_scored"])
-            a_conceded = float(a_data["avg_conceded"])
+            a_rank, a_points, a_form = a_data["rank"], a_data["points"], a_data["form"]
+            a_scored, a_conceded = float(a_data["avg_scored"]), float(a_data["avg_conceded"])
         else:
-            a_rank = "Kupa" if is_cup else ((sum(ord(c) for c in away_team) % 18) + 1)
+            a_rank = "Kupa" if is_cup else ((sum(ord(c) for c in away_team) % 16) + 1)
             a_points = 15 if not is_cup else "-"
             a_form = ["M", "B", "G", "M", "G"]
-            a_scored = 1.15
-            a_conceded = 1.30
+            a_scored, a_conceded = 1.15, 1.30
 
-        # xG Hesaplama
         h_pts_val = sum(3 if x == 'G' else (1 if x == 'B' else 0) for x in h_form)
         a_pts_val = sum(3 if x == 'G' else (1 if x == 'B' else 0) for x in a_form)
-        h_form_factor = round(1.0 + ((h_pts_val - 7.5) * 0.02), 2)
-        a_form_factor = round(1.0 + ((a_pts_val - 7.5) * 0.02), 2)
+        h_factor = round(1.0 + ((h_pts_val - 7.5) * 0.02), 2)
+        a_factor = round(1.0 + ((a_pts_val - 7.5) * 0.02), 2)
 
-        home_calc_xg = round((h_scored * a_conceded / 1.30) * 1.15 * h_form_factor, 2)
-        away_calc_xg = round((a_scored * h_conceded / 1.30) * 0.88 * a_form_factor, 2)
+        home_calc_xg = round((h_scored * a_conceded / 1.30) * 1.15 * h_factor, 2)
+        away_calc_xg = round((a_scored * h_conceded / 1.30) * 0.88 * a_factor, 2)
 
-        match["home_stats"] = {
-            "rank": h_rank,
-            "points": h_points,
-            "form": h_form,
-            "calc_xg": max(0.45, home_calc_xg)
-        }
-        match["away_stats"] = {
-            "rank": a_rank,
-            "points": a_points,
-            "form": a_form,
-            "calc_xg": max(0.35, away_calc_xg)
-        }
+        match["home_stats"] = {"rank": h_rank, "points": h_points, "form": h_form, "calc_xg": max(0.45, home_calc_xg)}
+        match["away_stats"] = {"rank": a_rank, "points": a_points, "form": a_form, "calc_xg": max(0.35, away_calc_xg)}
 
-        # Kök Seviye Anahtarlar
         match["home_rank"] = h_rank
         match["away_rank"] = a_rank
         match["home_points"] = h_points
