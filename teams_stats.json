@@ -1,0 +1,56 @@
+{
+    "Manchester City": {
+        "xg_for": 2.25,
+        "xg_against": 0.85,
+        "rest_days": 4,
+        "league": "Premier League"
+    },
+    "Arsenal": {
+        "xg_for": 1.95,
+        "xg_against": 0.9,
+        "rest_days": 3,
+        "league": "Premier League"
+    },
+    "Liverpool": {
+        "xg_for": 2.15,
+        "xg_against": 1.05,
+        "rest_days": 2,
+        "league": "Premier League"
+    },
+    "Chelsea": {
+        "xg_for": 1.7,
+        "xg_against": 1.3,
+        "rest_days": 5,
+        "league": "Premier League"
+    },
+    "Galatasaray": {
+        "xg_for": 2.3,
+        "xg_against": 0.95,
+        "rest_days": 5,
+        "league": "Süper Lig"
+    },
+    "Fenerbahçe": {
+        "xg_for": 2.2,
+        "xg_against": 1.0,
+        "rest_days": 4,
+        "league": "Süper Lig"
+    },
+    "Beşiktaş": {
+        "xg_for": 1.75,
+        "xg_against": 1.2,
+        "rest_days": 3,
+        "league": "Süper Lig"
+    },
+    "Real Madrid": {
+        "xg_for": 2.1,
+        "xg_against": 0.9,
+        "rest_days": 4,
+        "league": "La Liga"
+    },
+    "Barcelona": {
+        "xg_for": 2.35,
+        "xg_against": 1.1,
+        "rest_days": 3,
+        "league": "La Liga"
+    }
+}

@@ -1,0 +1,239 @@
+[
+    {
+        "match": "Galatasaray vs Fenerbahçe",
+        "expected_goals": {
+            "home": 1.61,
+            "away": 1.5
+        },
+        "probabilities": {
+            "home_win": 39.2,
+            "draw": 26.1,
+            "away_win": 34.6,
+            "over_15": 82.9,
+            "over_25": 60.2,
+            "under_25": 39.8,
+            "btts_yes": 63.4,
+            "btts_no": 36.6
+        },
+        "top_predicted_scores": [
+            {
+                "score": "1-1",
+                "prob": "%11.9"
+            },
+            {
+                "score": "2-1",
+                "prob": "%8.7"
+            },
+            {
+                "score": "1-2",
+                "prob": "%8.1"
+            }
+        ],
+        "entropy": 1.565,
+        "status": "ELENDİ (Kaotik Maç)",
+        "value_scenarios": [
+            {
+                "market": "MS 2",
+                "model_prob": "%34.6",
+                "bulten_orani": 3.1,
+                "expected_value": "+%7.4"
+            }
+        ],
+        "match_id": "MAS-301",
+        "date": "2026-10-07 05:21"
+    },
+    {
+        "match": "Arsenal vs Chelsea",
+        "expected_goals": {
+            "home": 1.71,
+            "away": 1.21
+        },
+        "probabilities": {
+            "home_win": 48.0,
+            "draw": 26.3,
+            "away_win": 25.7,
+            "over_15": 80.1,
+            "over_25": 55.9,
+            "under_25": 44.1,
+            "btts_yes": 58.7,
+            "btts_no": 41.3
+        },
+        "top_predicted_scores": [
+            {
+                "score": "1-1",
+                "prob": "%12.4"
+            },
+            {
+                "score": "2-1",
+                "prob": "%9.5"
+            },
+            {
+                "score": "1-0",
+                "prob": "%8.0"
+            }
+        ],
+        "entropy": 1.519,
+        "status": "ONAYLANDI (Stabil)",
+        "value_scenarios": [
+            {
+                "market": "MS 2",
+                "model_prob": "%25.7",
+                "bulten_orani": 4.2,
+                "expected_value": "+%8.1"
+            }
+        ],
+        "match_id": "MAS-302",
+        "date": "2026-10-07 06:21"
+    },
+    {
+        "match": "Manchester City vs Liverpool",
+        "expected_goals": {
+            "home": 1.68,
+            "away": 1.43
+        },
+        "probabilities": {
+            "home_win": 42.5,
+            "draw": 25.9,
+            "away_win": 31.6,
+            "over_15": 82.9,
+            "over_25": 60.2,
+            "under_25": 39.8,
+            "btts_yes": 63.1,
+            "btts_no": 36.9
+        },
+        "top_predicted_scores": [
+            {
+                "score": "1-1",
+                "prob": "%11.9"
+            },
+            {
+                "score": "2-1",
+                "prob": "%9.0"
+            },
+            {
+                "score": "1-2",
+                "prob": "%7.7"
+            }
+        ],
+        "entropy": 1.555,
+        "status": "ONAYLANDI (Stabil)",
+        "value_scenarios": [],
+        "match_id": "MAS-303",
+        "date": "2026-10-07 08:21"
+    },
+    {
+        "match": "Real Madrid vs Atletico Madrid",
+        "expected_goals": {
+            "home": 1.5,
+            "away": 1.26
+        },
+        "probabilities": {
+            "home_win": 41.6,
+            "draw": 27.9,
+            "away_win": 30.5,
+            "over_15": 77.6,
+            "over_25": 52.2,
+            "under_25": 47.8,
+            "btts_yes": 57.0,
+            "btts_no": 43.0
+        },
+        "top_predicted_scores": [
+            {
+                "score": "1-1",
+                "prob": "%13.3"
+            },
+            {
+                "score": "2-1",
+                "prob": "%9.0"
+            },
+            {
+                "score": "1-0",
+                "prob": "%8.2"
+            }
+        ],
+        "entropy": 1.563,
+        "status": "ELENDİ (Kaotik Maç)",
+        "value_scenarios": [
+            {
+                "market": "MS 2",
+                "model_prob": "%30.5",
+                "bulten_orani": 3.9,
+                "expected_value": "+%19.0"
+            }
+        ],
+        "match_id": "MAS-304",
+        "date": "2026-10-07 07:21"
+    },
+    {
+        "match": "Inter vs Juventus",
+        "expected_goals": {
+            "home": 1.33,
+            "away": 1.13
+        },
+        "probabilities": {
+            "home_win": 39.8,
+            "draw": 29.9,
+            "away_win": 30.3,
+            "over_15": 71.9,
+            "over_25": 44.7,
+            "under_25": 55.3,
+            "btts_yes": 51.3,
+            "btts_no": 48.7
+        },
+        "top_predicted_scores": [
+            {
+                "score": "1-1",
+                "prob": "%14.2"
+            },
+            {
+                "score": "0-0",
+                "prob": "%9.9"
+            },
+            {
+                "score": "1-0",
+                "prob": "%9.9"
+            }
+        ],
+        "entropy": 1.572,
+        "status": "ELENDİ (Kaotik Maç)",
+        "value_scenarios": [],
+        "match_id": "MAS-305",
+        "date": "2026-10-07 09:21"
+    },
+    {
+        "match": "Beşiktaş vs Trabzonspor",
+        "expected_goals": {
+            "home": 1.48,
+            "away": 1.36
+        },
+        "probabilities": {
+            "home_win": 38.9,
+            "draw": 27.6,
+            "away_win": 33.5,
+            "over_15": 78.8,
+            "over_25": 54.0,
+            "under_25": 46.0,
+            "btts_yes": 58.7,
+            "btts_no": 41.3
+        },
+        "top_predicted_scores": [
+            {
+                "score": "1-1",
+                "prob": "%13.1"
+            },
+            {
+                "score": "2-1",
+                "prob": "%8.7"
+            },
+            {
+                "score": "1-2",
+                "prob": "%8.0"
+            }
+        ],
+        "entropy": 1.571,
+        "status": "ELENDİ (Kaotik Maç)",
+        "value_scenarios": [],
+        "match_id": "MAS-306",
+        "date": "2026-10-07 04:21"
+    }
+]
