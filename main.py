@@ -120,7 +120,7 @@ def run_scientific_pipeline():
                     enriched_match = feeder.enrich_match_data(match)
                     result = engine.analyze_match(enriched_match)
                     
-                    result["match_id"] = enriched_match.get("match_id", "40100")
+                   result["match_id"] = enriched_match.get("match_id", "40100")
                     result["date"] = enriched_match.get("start_time", "")
                     result["league"] = enriched_match.get("league", "Futbol")
                     result["is_live"] = enriched_match.get("is_live", False)
@@ -129,10 +129,18 @@ def run_scientific_pipeline():
                     result["away_score"] = enriched_match.get("away_score", 0)
                     result["home_reds"] = enriched_match.get("home_reds", 0)
                     result["away_reds"] = enriched_match.get("away_reds", 0)
-                    result["home_score"] = enriched_match.get("home_score", 0)
-                    result["away_score"] = enriched_match.get("away_score", 0)
-                    result["home_reds"] = enriched_match.get("home_reds", 0)
-                    result["away_reds"] = enriched_match.get("away_reds", 0)
+
+                    # --- LİG SIRASI, PUAN VE FORM VERİLERİ ---
+                    result["home_stats"] = enriched_match.get("home_stats", {})
+                    result["away_stats"] = enriched_match.get("away_stats", {})
+                    result["home_rank"] = enriched_match.get("home_rank", "-")
+                    result["away_rank"] = enriched_match.get("away_rank", "-")
+                    result["home_points"] = enriched_match.get("home_points", "-")
+                    result["away_points"] = enriched_match.get("away_points", "-")
+                    result["home_form"] = enriched_match.get("home_form", [])
+                    result["away_form"] = enriched_match.get("away_form", [])
+
+                    analyzed_matches.append(result)
 
                     # --- LİG SIRALAMALARI (Frontend'in beklediği alanlar) ---
                     result["home_rank"] = enriched_match.get("home_rank", enriched_match.get("home_pos", None))
