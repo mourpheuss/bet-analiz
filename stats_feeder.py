@@ -44,6 +44,18 @@ class StatsFeeder:
         n = unicodedata.normalize('NFKD', text).encode('ASCII', 'ignore').decode('utf-8')
         return re.sub(r'[^a-zA-Z0-9]', '', n).lower()
 
+    def _safe_int(self, val, default=0):
+        try:
+            return int(float(val)) if val is not None else default
+        except (ValueError, TypeError):
+            return default
+
+    def _safe_float(self, val, default=0.0):
+        try:
+            return float(val) if val is not None else default
+        except (ValueError, TypeError):
+            return default
+
     def fetch_league_standings(self, league_name):
         if league_name in self.standings_cache:
             return self.standings_cache[league_name]
@@ -52,18 +64,22 @@ class StatsFeeder:
         if not slug:
             return {}
 
-        url = f"https://site.web.api.espn.com/apis/v2/sports/soccer/{slug}/standings"
+        url = f"https://site.api.espn.com/apis/v2/sports/soccer/{slug}/standings"
         table = {}
 
         try:
-            res = requests.get(url, headers=self.headers, timeout=6)
+            res = requests.get(url, headers=self.headers, timeout=7)
             if res.status_code == 200:
                 data = res.json()
                 entries = []
+                
                 if "children" in data and len(data["children"]) > 0:
-                    entries = data["children"][0].get("standings", {}).get("entries", [])
+                    c0 = data["children"][0]
+                    st = c0.get("standings", {})
+                    entries = st.get("entries", []) if isinstance(st, dict) else (st[0].get("entries", []) if isinstance(st, list) and st else [])
                 elif "standings" in data:
-                    entries = data["standings"].get("entries", [])
+                    st = data["standings"]
+                    entries = st.get("entries", []) if isinstance(st, dict) else (st[0].get("entries", []) if isinstance(st, list) and st else [])
 
                 for idx, entry in enumerate(entries):
                     t_info = entry.get("team", {})
@@ -72,16 +88,16 @@ class StatsFeeder:
 
                     stats_list = {s.get("name"): s for s in entry.get("stats", [])}
                     
-                    rank = int(stats_list.get("rank", {}).get("value", idx + 1))
-                    points = int(stats_list.get("points", {}).get("value", 0))
-                    played = int(stats_list.get("gamesPlayed", {}).get("value", 1))
-                    gf = float(stats_list.get("pointsFor", {}).get("value", 0))
-                    ga = float(stats_list.get("pointsAgainst", {}).get("value", 0))
+                    rank = self._safe_int(stats_list.get("rank", {}).get("value"), idx + 1)
+                    points = self._safe_int(stats_list.get("points", {}).get("value"), 0)
+                    played = max(1, self._safe_int(stats_list.get("gamesPlayed", {}).get("value"), 1))
+                    gf = self._safe_float(stats_list.get("pointsFor", {}).get("value"), 0.0)
+                    ga = self._safe_float(stats_list.get("pointsAgainst", {}).get("value"), 0.0)
 
                     raw_form = stats_list.get("form", {}).get("displayValue", "")
                     form_list = []
                     if raw_form:
-                        for ch in raw_form.replace(",", "").upper()[:5]:
+                        for ch in str(raw_form).replace(",", "").upper()[:5]:
                             if ch == 'W': form_list.append('G')
                             elif ch == 'D': form_list.append('B')
                             elif ch == 'L': form_list.append('M')
@@ -93,14 +109,15 @@ class StatsFeeder:
                         "rank": rank,
                         "points": points,
                         "played": played,
-                        "avg_scored": round(gf / max(1, played), 2),
-                        "avg_conceded": round(ga / max(1, played), 2),
+                        "avg_scored": round(gf / played, 2),
+                        "avg_conceded": round(ga / played, 2),
                         "form": form_list
                     }
 
+                print(f"-> [{league_name}] Puan tablosu yüklendi: {len(table)} takım.")
                 self.standings_cache[league_name] = table
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[UYARI] {league_name} puan durumu çekilemedi: {e}")
 
         return table
 
@@ -117,14 +134,13 @@ class StatsFeeder:
         away_team = match.get("away_team", "")
 
         is_cup = any(w in league.lower() for w in ["kupa", "cup", "trophy", "pokal", "copa", "beker", "taça", "nations", "friendly", "elemeleri"])
-
         table = self.fetch_league_standings(league)
 
         norm_h = self._normalize(home_team)
         norm_a = self._normalize(away_team)
 
-        h_data = table.get(norm_h) or next((v for k, v in table.items() if k in norm_h or norm_h in k), None)
-        a_data = table.get(norm_a) or next((v for k, v in table.items() if k in norm_a or norm_a in k), None)
+        h_data = table.get(norm_h) or next((v for k, v in table.items() if (len(k) >= 3 and k in norm_h) or (len(norm_h) >= 3 and norm_h in k)), None)
+        a_data = table.get(norm_a) or next((v for k, v in table.items() if (len(k) >= 3 and k in norm_a) or (len(norm_a) >= 3 and norm_a in k)), None)
 
         if h_data and a_data:
             h_form = h_data["form"]
@@ -140,7 +156,7 @@ class StatsFeeder:
             home_calc_xg = round((h_base * a_conc / 1.30) * 1.15 * h_form_factor, 2)
 
             a_base = float(a_data["avg_scored"])
-            h_conc = float(h_data["conceded"] if "conceded" in h_data else h_data["avg_conceded"])
+            h_conc = float(h_data.get("avg_conceded", 1.20))
             away_calc_xg = round((a_base * h_conc / 1.30) * 0.88 * a_form_factor, 2)
 
             h_rank = h_data["rank"]
@@ -156,18 +172,26 @@ class StatsFeeder:
             h_points = "-"
             a_points = "-"
 
+        # Stats paketleri
         match["home_stats"] = {
             "rank": h_rank,
             "points": h_points,
             "form": h_form,
             "calc_xg": max(0.45, home_calc_xg)
         }
-
         match["away_stats"] = {
             "rank": a_rank,
             "points": a_points,
             "form": a_form,
             "calc_xg": max(0.35, away_calc_xg)
         }
+
+        # Kök seviyede doğrudan erişim
+        match["home_rank"] = h_rank
+        match["away_rank"] = a_rank
+        match["home_points"] = h_points
+        match["away_points"] = a_points
+        match["home_form"] = h_form
+        match["away_form"] = a_form
 
         return match
