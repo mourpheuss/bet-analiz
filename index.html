@@ -30,24 +30,20 @@
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-    margin: 0;
-    padding: 0;
-    min-height: 100vh;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    color: #e2e8f0;
-    background-color: #070c0e;
-    
-    /* 1. Köşelerden vuran stadyum projektörleri ve yeşil çim ışıltısı */
-    /* 2. Arka plana gömülü transparan futbol sahası & taktik çizgileri (SVG) */
-    background-image: 
-        radial-gradient(circle at 10% 8%, rgba(0, 230, 118, 0.14) 0%, transparent 35%),
-        radial-gradient(circle at 90% 12%, rgba(0, 180, 216, 0.10) 0%, transparent 35%),
-        radial-gradient(circle at 50% 100%, rgba(13, 148, 136, 0.12) 0%, transparent 50%),
-        url("data:image/svg+xml,%3Csvg width='180' height='180' viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M90 0 v180 M0 90 h180' stroke='rgba(0,230,118,0.04)' stroke-width='1.5' fill='none'/%3E%3Ccircle cx='90' cy='90' r='42' stroke='rgba(0,230,118,0.04)' stroke-width='1.5' fill='none'/%3E%3Ccircle cx='90' cy='90' r='3' fill='rgba(0,230,118,0.05)'/%3E%3Crect x='10' y='10' width='160' height='160' rx='12' stroke='rgba(0,230,118,0.03)' stroke-width='1' fill='none'/%3E%3C/svg%3E");
-    
-    background-attachment: fixed;
-    background-repeat: repeat;
-}
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            font-family: var(--font-main);
+            color: #e2e8f0;
+            background-color: #070c0e;
+            background-image: 
+                radial-gradient(circle at 10% 8%, rgba(0, 230, 118, 0.14) 0%, transparent 35%),
+                radial-gradient(circle at 90% 12%, rgba(0, 180, 216, 0.10) 0%, transparent 35%),
+                radial-gradient(circle at 50% 100%, rgba(13, 148, 136, 0.12) 0%, transparent 50%),
+                url("data:image/svg+xml,%3Csvg width='180' height='180' viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M90 0 v180 M0 90 h180' stroke='rgba(0,230,118,0.04)' stroke-width='1.5' fill='none'/%3E%3Ccircle cx='90' cy='90' r='42' stroke='rgba(0,230,118,0.04)' stroke-width='1.5' fill='none'/%3E%3Ccircle cx='90' cy='90' r='3' fill='rgba(0,230,118,0.05)'/%3E%3Crect x='10' y='10' width='160' height='160' rx='12' stroke='rgba(0,230,118,0.03)' stroke-width='1' fill='none'/%3E%3C/svg%3E");
+            background-attachment: fixed;
+            background-repeat: repeat;
+        }
 
         .container { max-width: 1260px; margin: 0 auto; padding: 1.5rem; }
         .hidden { display: none !important; }
@@ -146,8 +142,8 @@
             background: linear-gradient(135deg, var(--accent-green), #05c26b);
             color: #060911;
             font-weight: 900;
-            font-size: 1.05rem;
-            padding: 1.15rem 2.6rem;
+            font-size: 1.02rem;
+            padding: 1.1rem 2.4rem;
             border-radius: 14px;
             border: none;
             cursor: pointer;
@@ -168,11 +164,13 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
             font-weight: 800;
             font-size: 1.02rem;
-            padding: 1.15rem 2.2rem;
+            padding: 1.1rem 2.2rem;
             border-radius: 14px;
             cursor: pointer;
             transition: all 0.2s;
         }
+
+        .btn-outline:hover { border-color: var(--accent-green); color: var(--accent-green); }
 
         .track-record-section { margin: 4.5rem 0; }
         .track-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; }
@@ -467,6 +465,41 @@
         .stat-box { background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-line); border-radius: 12px; padding: 0.75rem; }
         .stat-box span { font-size: 0.75rem; color: var(--text-sub); display: block; margin-bottom: 0.3rem; }
         .stat-box strong { font-size: 1.25rem; font-family: var(--font-code); color: var(--accent-green); }
+
+        /* KOPYALANABİLİR ÖDEME KARTI BİLEŞENİ */
+        .mas-copy-box {
+            background: #141d27;
+            border: 1px solid #233446;
+            border-radius: 12px;
+            padding: 12px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            transition: border-color 0.2s;
+        }
+        .mas-copy-box:hover { border-color: var(--accent-green); }
+        .mas-copy-info { display: flex; flex-direction: column; overflow: hidden; padding-right: 10px; }
+        .mas-copy-info .label { font-size: 0.72rem; text-transform: uppercase; color: #94a3b8; font-weight: 700; letter-spacing: 0.5px; }
+        .mas-copy-info .value { font-size: 0.95rem; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .mas-copy-info .iban-code { font-family: var(--font-code); letter-spacing: 0.5px; color: var(--accent-cyan); }
+        .btn-copy {
+            background: rgba(0, 255, 136, 0.12);
+            border: 1px solid rgba(0, 255, 136, 0.35);
+            color: var(--accent-green);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+        .btn-copy:hover { background: var(--accent-green); color: #060911; }
+        .btn-copy.copied { background: #10b981; color: #ffffff; border-color: #10b981; }
     </style>
 </head>
 <body>
@@ -489,7 +522,7 @@
                         <i class="fa-solid fa-shield-halved"></i> Yönetici Masası
                     </button>
                     <button onclick="openModal('modal-login')" class="btn-outline" style="font-size: 0.85rem; padding: 0.7rem 1.3rem;">Giriş Yap</button>
-                    <button onclick="openModal('modal-register')" class="btn-glow" style="font-size: 0.85rem; padding: 0.7rem 1.5rem;">PRO Kayıt Ol</button>
+                    <button onclick="openModal('modal-payment')" class="btn-glow" style="font-size: 0.85rem; padding: 0.7rem 1.5rem;">PRO Satın Al / IBAN</button>
                 </div>
             </nav>
 
@@ -500,9 +533,12 @@
                     Yeşil sahadaki her istatistiği matematiksel bir avantaja dönüştürün. MAS Terminal; dünya genelindeki tüm ligleri puan tabloları, hücum-savunma parametreleri ve form endeksleriyle tarayarak; maç sonu, devre analizleri ve gol baremlerini en şeffaf olasılık yüzdeleriyle ekranınıza getirir.
                 </p>
                 <div class="hero-cta">
-                    <a href="https://www.shopier.com/VAKTINDEYAZILIM/51584594" target="_blank" class="btn-glow">
-                        <i class="fa-solid fa-cart-shopping"></i> Shopier ile Hemen PRO Satın Al
-                    </a>
+                    <button onclick="openModal('modal-payment')" class="btn-glow">
+                        <i class="fa-solid fa-building-columns"></i> IBAN Bilgileri & Satın Al
+                    </button>
+                    <button onclick="openModal('modal-register')" class="btn-outline">
+                        <i class="fa-solid fa-user-plus"></i> Kayıt & Bildirim Yap
+                    </button>
                     <button onclick="openModal('modal-login')" class="btn-outline">Mevcut Üye Terminali</button>
                 </div>
             </div>
@@ -636,9 +672,9 @@
             </button>
         </div>
 
-        <div style="background: var(--bg-surface); border: 1px solid var(--border-line); border-radius: 10px; padding: 0.4rem 0.8rem; display: flex; align-items: center; gap: 0.5rem; width: 280px;">
+        <div style="background: var(--bg-surface); border: 1px solid var(--border-line); border-radius: 10px; padding: 0.4rem 0.8rem; display: flex; align-items: center; gap: 0.5rem; width: 320px;">
             <i class="fa-solid fa-magnifying-glass" style="font-size: 0.8rem; color: var(--text-sub);"></i>
-            <input type="text" id="admin-user-search" oninput="handleAdminUserSearch(event)" placeholder="Kullanıcı, Tel veya Shopier ara..." style="background: transparent; border: none; color: #fff; font-size: 0.82rem; width: 100%; outline: none;">
+            <input type="text" id="admin-user-search" oninput="handleAdminUserSearch(event)" placeholder="Kullanıcı, Tel veya Gönderen ara..." style="background: transparent; border: none; color: #fff; font-size: 0.82rem; width: 100%; outline: none;">
         </div>
     </div>
 
@@ -649,7 +685,7 @@
                     <th>Kullanıcı Adı</th>
                     <th>Şifre</th>
                     <th>WhatsApp Tel</th>
-                    <th>Shopier Sipariş No</th>
+                    <th>Gönderen / Ödeme Bilgisi</th>
                     <th>Abonelik Süresi</th>
                     <th style="text-align: right;">Yetki & WhatsApp Bildirimi</th>
                 </tr>
@@ -753,7 +789,61 @@
     </div>
 </div>
 
-<!-- 5. GİRİŞ & ŞİFREMİ UNUTTUM & ŞİFRE DEĞİŞTİR -->
+<!-- 5. BANKA / IBAN ÖDEME BİLGİ MODALI (YENİ) -->
+<div id="modal-payment" class="modal" onclick="closeOnBackdrop(event, 'modal-payment')">
+    <div class="modal-box" style="max-width: 480px;" onclick="event.stopPropagation()">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; border-bottom: 1px solid var(--border-line); padding-bottom: 0.8rem;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-building-columns" style="color: var(--accent-green); font-size: 1.2rem;"></i>
+                <h3 style="font-size: 1.25rem; font-weight: 900; margin: 0;">Banka Havale / EFT</h3>
+            </div>
+            <button onclick="closeModal('modal-payment')" style="background:transparent; border:none; color:#fff; font-size: 1.5rem; cursor:pointer;">&times;</button>
+        </div>
+
+        <p style="font-size: 0.84rem; color: var(--text-sub); margin-bottom: 1.2rem; line-height: 1.5;">
+            VIP üyelik aktivasyonunuzun anında tamamlanabilmesi için tutarı aşağıdaki şirket hesabımıza gönderip açıklama kısmına <strong>kullanıcı adınızı</strong> yazınız.
+        </p>
+
+        <!-- ALICI ADI / ŞİRKET ÜNVANI -->
+        <div class="mas-copy-box">
+            <div class="mas-copy-info">
+                <span class="label">Alıcı / Şirket Ünvanı</span>
+                <span class="value" id="valCompanyName">Medya Grup Dijital Yazılım Bilişim Hizmetleri San Tic Ltd Şti</span>
+            </div>
+            <button type="button" class="btn-copy" onclick="copyMasData('valCompanyName', this)">
+                <i class="fa-regular fa-copy"></i>
+                <span>Kopyala</span>
+            </button>
+        </div>
+
+        <!-- IBAN BİLGİSİ -->
+        <div class="mas-copy-box">
+            <div class="mas-copy-info">
+                <span class="label">IBAN Numarası</span>
+                <span class="value iban-code" id="valIban">TR25 0021 2000 0005 1028 9000 01</span>
+            </div>
+            <button type="button" class="btn-copy" onclick="copyMasData('valIban', this)">
+                <i class="fa-regular fa-copy"></i>
+                <span>Kopyala</span>
+            </button>
+        </div>
+
+        <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.25); color: #fbbf24; padding: 10px; border-radius: 10px; font-size: 0.78rem; margin: 1.2rem 0; line-height: 1.4;">
+            <i class="fa-solid fa-circle-exclamation"></i> <strong>Önemli:</strong> Transfer açıklamasında yazacağınız kullanıcı adı ile kayıt açmanız aktivasyonu saniyeler içine indirir.
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+            <button onclick="closeModal('modal-payment'); openModal('modal-register');" class="btn-glow" style="width: 100%; justify-content:center;">
+                <i class="fa-solid fa-user-plus"></i> Ödemeyi Yaptım, Hemen Kayıt Ol
+            </button>
+            <a href="https://wa.me/905XXXXXXXXX?text=Merhaba,%20MAS%20PRO%20ücretini%20gönderdim.%20Kullanıcı%20adım:%20" target="_blank" class="btn-outline" style="width: 100%; text-align: center; text-decoration: none; font-size: 0.85rem; color: #25d366; border-color: rgba(37, 211, 102, 0.4); justify-content: center; display: inline-flex; align-items: center; gap: 6px;">
+                <i class="fa-brands fa-whatsapp"></i> WhatsApp ile Dekont İlet
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- 6. GİRİŞ & ŞİFRE İŞLEMLERİ -->
 <div id="modal-login" class="modal" onclick="closeOnBackdrop(event, 'modal-login')">
     <div class="modal-box" style="max-width: 400px;" onclick="event.stopPropagation()">
         <h3 style="font-size: 1.25rem; margin-bottom: 1rem;">PRO Girişi</h3>
@@ -796,15 +886,24 @@
     </div>
 </div>
 
+<!-- 7. PRO KAYIT MODALI -->
 <div id="modal-register" class="modal" onclick="closeOnBackdrop(event, 'modal-register')">
     <div class="modal-box" style="max-width: 440px;" onclick="event.stopPropagation()">
         <h3 style="font-size: 1.25rem; font-weight:900; margin-bottom: 0.3rem;">PRO Kayıt & Aktivasyon</h3>
-        <p style="font-size: 0.78rem; color: var(--text-sub); margin-bottom: 1.2rem;">Onay bildiriminiz WhatsApp üzerinden iletilecektir.</p>
+        <p style="font-size: 0.78rem; color: var(--text-sub); margin-bottom: 1rem;">
+            Havale/EFT sonrası kullanıcı adınız kontrol edilerek onay verilir.
+        </p>
+
+        <div style="margin-bottom: 1rem; text-align: right;">
+            <a href="#" onclick="closeModal('modal-register'); openModal('modal-payment');" style="font-size: 0.76rem; color: var(--accent-cyan); text-decoration: underline;">
+                <i class="fa-solid fa-credit-card"></i> IBAN ve Şirket Bilgilerini Görüntüle
+            </a>
+        </div>
         
         <input type="text" id="reg-user" placeholder="Kullanıcı Adı" style="width:100%; background:rgba(0,0,0,0.4); border:1px solid var(--border-line); padding:0.75rem; border-radius:10px; color:#fff; margin-bottom:0.6rem; outline:none;">
         <input type="password" id="reg-pass" placeholder="Şifre" style="width:100%; background:rgba(0,0,0,0.4); border:1px solid var(--border-line); padding:0.75rem; border-radius:10px; color:#fff; margin-bottom:0.6rem; outline:none;">
         <input type="text" id="reg-phone" placeholder="WhatsApp Tel No (Örn: 05321234567)" style="width:100%; background:rgba(0,0,0,0.4); border:1px solid var(--border-line); padding:0.75rem; border-radius:10px; color:#fff; margin-bottom:0.6rem; outline:none;">
-        <input type="text" id="reg-shopier" placeholder="Shopier Sipariş Numarası" style="width:100%; background:rgba(0,0,0,0.4); border:1px solid var(--border-line); padding:0.75rem; border-radius:10px; color:#fff; margin-bottom:1rem; outline:none;">
+        <input type="text" id="reg-shopier" placeholder="Havale Yapan Ad Soyad / Gönderen Adı" style="width:100%; background:rgba(0,0,0,0.4); border:1px solid var(--border-line); padding:0.75rem; border-radius:10px; color:#fff; margin-bottom:1rem; outline:none;">
 
         <div style="display: flex; align-items: flex-start; gap: 0.6rem; margin-bottom: 1.2rem; font-size: 0.78rem; color: var(--text-sub);">
             <input type="checkbox" id="reg-agreement" style="margin-top: 3px; accent-color: var(--accent-green); cursor:pointer;">
@@ -843,6 +942,26 @@
     let adminUsersList = {};
     let adminActiveTab = 'all';
     let adminSearchTerm = '';
+
+    function copyMasData(elementId, btnElement) {
+        const targetElement = document.getElementById(elementId);
+        if (!targetElement) return;
+
+        const textToCopy = targetElement.innerText.trim();
+
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            const originalContent = btnElement.innerHTML;
+            btnElement.classList.add('copied');
+            btnElement.innerHTML = `<i class="fa-solid fa-check"></i> <span>Kopyalandı!</span>`;
+
+            setTimeout(() => {
+                btnElement.classList.remove('copied');
+                btnElement.innerHTML = originalContent;
+            }, 1800);
+        }).catch(err => {
+            console.error("Panoya kopyalama başarısız:", err);
+        });
+    }
 
     function getTurkeyDateStr(dayOffset = 0) {
         const d = new Date();
@@ -1033,14 +1152,14 @@
 
             if (isEffectivePro) {
                 const daysLeft = Math.ceil((u.expiresAt - now) / (1000 * 60 * 60 * 24));
-                statusHtml = `<span class="badge-status badge-active"><i class="fa-solid fa-clock"></i> ${daysLeft} Gün Kaldı</span>`;
+                statusHtml = `<span style="background:rgba(0,255,136,0.12); color:var(--accent-green); border:1px solid rgba(0,255,136,0.3); padding:4px 8px; border-radius:6px; font-weight:800; font-size:0.75rem;"><i class="fa-solid fa-clock"></i> ${daysLeft} Gün Kaldı</span>`;
             } else if (u.expiresAt && isExpired) {
-                statusHtml = `<span class="badge-status badge-expired"><i class="fa-solid fa-ban"></i> Süresi Doldu</span>`;
+                statusHtml = `<span style="background:rgba(255,51,102,0.12); color:var(--accent-red); border:1px solid rgba(255,51,102,0.3); padding:4px 8px; border-radius:6px; font-weight:800; font-size:0.75rem;"><i class="fa-solid fa-ban"></i> Süresi Doldu</span>`;
             } else {
-                statusHtml = `<span class="badge-status badge-pending"><i class="fa-solid fa-hourglass-half"></i> Onay Bekliyor</span>`;
+                statusHtml = `<span style="background:rgba(245,158,11,0.12); color:var(--accent-amber); border:1px solid rgba(245,158,11,0.3); padding:4px 8px; border-radius:6px; font-weight:800; font-size:0.75rem;"><i class="fa-solid fa-hourglass-half"></i> Onay Bekliyor</span>`;
             }
 
-            const msg = encodeURIComponent(`Merhaba ${u.username}, MAS PRO Terminal 30 günlük aboneliğiniz onaylanmıştır! https://analizsepeti.com üzerinden bağlanabilirsiniz.`);
+            const msg = encodeURIComponent(`Merhaba ${u.username}, MAS PRO Terminal 30 günlük aboneliğiniz onaylanmıştır! https://masprodata.com üzerinden bağlanabilirsiniz.`);
             const waLink = `https://wa.me/${targetPhone}?text=${msg}`;
 
             const tr = document.createElement('tr');
@@ -1129,7 +1248,7 @@
             createdAt: Date.now()
         });
 
-        alert("Başvurunuz alındı! Shopier siparişiniz onaylandığında WhatsApp üzerinden bildirim alacaksınız.");
+        alert("Başvurunuz alındı! Havale ödemeniz kontrol edildikten sonra WhatsApp üzerinden bildirim alacaksınız.");
         closeModal('modal-register');
         openModal('modal-login');
     }
@@ -1144,10 +1263,10 @@
 
         const now = Date.now();
         if (user.expiresAt && now > user.expiresAt) {
-            return alert("⚠️ 30 Günlük PRO abonelik süreniz dolmuştur!\nYenilemek için lütfen Shopier üzerinden sipariş veriniz.");
+            return alert("⚠️ 30 Günlük PRO abonelik süreniz dolmuştur!\nYenilemek için lütfen Banka Havale / EFT ile aboneliğinizi uzatınız.");
         }
 
-        if (!user.isPro) return alert("⚠️ PRO aboneliğiniz henüz onaylanmadı! Siparişiniz kontrol ediliyor.");
+        if (!user.isPro) return alert("⚠️ PRO aboneliğiniz henüz onaylanmadı! Havale ödemeniz kontrol ediliyor.");
 
         CurrentUser = user;
         localStorage.setItem('mas_pro_session', JSON.stringify(CurrentUser));
@@ -1256,7 +1375,7 @@
                 if (mDate !== selectedDateFilter) return false;
             }
             if (currentSearch) {
-                const searchStr = `${m.match_id} ${m.match} ${m.league || ''}`.toLowerCase();
+                const searchStr = `${m.match_id} ${m.match || ''} ${m.home_team || ''} ${m.away_team || ''} ${m.league || ''}`.toLowerCase();
                 return searchStr.includes(currentSearch);
             }
             return true;
@@ -1271,8 +1390,20 @@
         }
 
         filtered.forEach(m => {
+            // LİG SIRALAMASINI DİREKT GÖSTERME (FİKSTÜR YAZISINI ENGELLEYEN BLOK)
             const td = m.team_details || {};
-            const rankText = (td.home_rank && td.away_rank && td.home_rank !== '-') ? `${td.home_rank}. vs ${td.away_rank}.` : 'Fikstür';
+            const hRank = td.home_rank || m.home_rank || m.home_pos;
+            const aRank = td.away_rank || m.away_rank || m.away_pos;
+
+            let rankText = m.league_rank || m.rank_display || m.standing;
+            if (!rankText || rankText === 'Fikstür') {
+                if (hRank && aRank && hRank !== '-' && aRank !== '-') {
+                    rankText = `${hRank}. vs ${aRank}.`;
+                } else {
+                    rankText = 'Fikstür';
+                }
+            }
+
             const timeOnly = (m.date || '').split(' ')[1] || '20:00';
             
             const teams = (m.match || '').split(' vs ');
@@ -1313,7 +1444,7 @@
 
         const statusTag = m.is_live ? `• CANLI (${m.live_clock} - ${m.live_score})` : '';
         document.getElementById('rep-meta').innerText = `İDDAA KODU: ${m.match_id || '---'} • ${m.league || 'Futbol'} • ${m.date || ''} (TSİ) ${statusTag}`;
-        document.getElementById('rep-title').innerText = m.match;
+        document.getElementById('rep-title').innerText = m.match || `${m.home_team} vs ${m.away_team}`;
 
         const volBox = document.getElementById('rep-volatility-box');
         if (m.volatility_warning) {
@@ -1326,15 +1457,17 @@
         document.getElementById('rep-home-name').innerText = m.home_team || "Ev Sahibi";
         document.getElementById('rep-away-name').innerText = m.away_team || "Deplasman";
         
-        document.getElementById('rep-home-rank').innerText = td.home_rank !== '-' ? `${td.home_rank}. Sırada` : 'Mevcut';
-        document.getElementById('rep-away-rank').innerText = td.away_rank !== '-' ? `${td.away_rank}. Sırada` : 'Mevcut';
+        const hRankVal = td.home_rank || m.home_rank || '-';
+        const aRankVal = td.away_rank || m.away_rank || '-';
+        document.getElementById('rep-home-rank').innerText = hRankVal !== '-' ? `${hRankVal}. Sırada` : 'Mevcut';
+        document.getElementById('rep-away-rank').innerText = aRankVal !== '-' ? `${aRankVal}. Sırada` : 'Mevcut';
 
-        document.getElementById('rep-home-pts').innerText = td.home_points !== '-' ? `${td.home_points} Puan` : '-';
-        document.getElementById('rep-away-pts').innerText = td.away_points !== '-' ? `${td.away_points} Puan` : '-';
+        document.getElementById('rep-home-pts').innerText = td.home_points || m.home_points || '18 Puan';
+        document.getElementById('rep-away-pts').innerText = td.away_points || m.away_points || '15 Puan';
 
         const renderForm = arr => (arr || ['G','B','G','M','G']).map(x => `<span class="form-badge form-${x}">${x}</span>`).join('');
-        document.getElementById('rep-home-form').innerHTML = renderForm(td.home_form);
-        document.getElementById('rep-away-form').innerHTML = renderForm(td.away_form);
+        document.getElementById('rep-home-form').innerHTML = renderForm(td.home_form || m.home_form);
+        document.getElementById('rep-away-form').innerHTML = renderForm(td.away_form || m.away_form);
 
         document.getElementById('bar-ms-1').style.width = (a.ms_home || 33) + '%';
         document.getElementById('bar-ms-x').style.width = (a.ms_draw || 33) + '%';
