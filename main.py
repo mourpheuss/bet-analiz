@@ -1,34 +1,44 @@
+import requests
+from datetime import datetime, timedelta
 from scraper import BulletinScraper
 from stats_feeder import StatsFeeder
 from engine import SportsAnalyticsEngine
 from firebase_sync import FirebaseSync
-import requests
 
 FIREBASE_DATABASE_URL = "https://analizsepeti-f3bb5-default-rtdb.firebaseio.com"
 FIREBASE_SECRET = "mZUATfv3TJqO6Ap8d1asrXemQIYqJflfYLzprmBS"
 
 def verify_and_update_successes(scraper, feeder, engine):
-    print("-> Biten kupa ve lig maçları taranıyor...")
+    print("-> Biten kupa ve lig maçları taranıyor (Son 5 gün)...")
     verified_successes = []
 
     key_leagues = [
+        ("Trendyol Süper Lig", "tur.1"),
+        ("Premier League", "eng.1"),
+        ("La Liga", "esp.1"),
+        ("Serie A", "ita.1"),
+        ("Bundesliga", "ger.1"),
+        ("Fransa Ligue 1", "fra.1"),
+        ("Brezilya Serie A", "bra.1"),
+        ("Brezilya Serie B", "bra.2"),
+        ("UEFA Uluslar Ligi", "uefa.nations"),
         ("Ziraat Türkiye Kupası", "tur.cup"),
         ("EFL Trophy", "eng.trophy"),
         ("FA Cup", "eng.fa"),
         ("Copa del Rey", "esp.copa_del_rey"),
         ("DFB-Pokal", "ger.dfb_pokal"),
-        ("UEFA Uluslar Ligi", "uefa.nations"),
-        ("Copa Libertadores", "conmebol.libertadores"),
-        ("Brezilya Serie A", "bra.1"),
-        ("Trendyol Süper Lig", "tur.1"),
-        ("Premier League", "eng.1"),
-        ("La Liga", "esp.1")
+        ("Copa Libertadores", "conmebol.libertadores")
     ]
 
+    # Son 5 günün tamamını kapsayan tarih aralığı
+    end_dt = datetime.utcnow()
+    start_dt = end_dt - timedelta(days=5)
+    date_param = f"{start_dt.strftime('%Y%m%d')}-{end_dt.strftime('%Y%m%d')}"
+
     for league_name, league_slug in key_leagues:
-        url = f"https://site.api.espn.com/apis/site/v2/sports/soccer/{league_slug}/scoreboard"
+        url = f"https://site.api.espn.com/apis/site/v2/sports/soccer/{league_slug}/scoreboard?dates={date_param}"
         try:
-            res = requests.get(url, headers=scraper.headers, timeout=5)
+            res = requests.get(url, headers=scraper.headers, timeout=6)
             if res.status_code != 200:
                 continue
 
@@ -61,29 +71,49 @@ def verify_and_update_successes(scraper, feeder, engine):
                     enriched = feeder.enrich_match_data(mock_match)
                     analysis = engine.analyze_match(enriched).get("analysis", {})
 
-                    pick_str = None
-                    o25_prob = analysis.get("over_25", 0.0)
-                    ms_h_prob = analysis.get("ms_home", 0.0)
-                    ms_a_prob = analysis.get("ms_away", 0.0)
-                    btts_prob = analysis.get("btts_yes", 0.0)
+                    o25_prob = float(analysis.get("over_25", 0.0))
+                    u25_prob = round(100.0 - o25_prob, 1)
+                    ms_h_prob = float(analysis.get("ms_home", 0.0))
+                    ms_a_prob = float(analysis.get("ms_away", 0.0))
+                    btts_prob = float(analysis.get("btts_yes", 0.0))
+                    btts_no_prob = round(100.0 - btts_prob, 1)
 
-                    if o25_prob >= 60.0 and tot_goals > 2.5:
-                        pick_str = f"2.5 Gol Üstü (%{o25_prob})"
-                    elif (100.0 - o25_prob) >= 60.0 and tot_goals < 2.5:
-                        pick_str = f"2.5 Gol Altı (%{round(100.0 - o25_prob, 1)})"
-                    elif ms_h_prob >= 60.0 and h_score > a_score:
-                        pick_str = f"MS 1: {home} (%{ms_h_prob})"
-                    elif ms_a_prob >= 56.0 and a_score > h_score:
-                        pick_str = f"MS 2: {away} (%{ms_a_prob})"
-                    elif btts_prob >= 58.0 and h_score > 0 and a_score > 0:
-                        pick_str = f"Karşılıklı Gol: VAR (%{btts_prob})"
+                    winning_picks = []
 
-                    if pick_str:
+                    # 1. MS 1 (Ev Sahibi Galibiyeti)
+                    if h_score > a_score and ms_h_prob >= 46.0:
+                        winning_picks.append((ms_h_prob, f"MS 1: {home} (%{ms_h_prob})"))
+
+                    # 2. MS 2 (Deplasman Galibiyeti)
+                    if a_score > h_score and ms_a_prob >= 40.0:
+                        winning_picks.append((ms_a_prob, f"MS 2: {away} (%{ms_a_prob})"))
+
+                    # 3. 2.5 Gol Üstü
+                    if tot_goals > 2.5 and o25_prob >= 52.0:
+                        winning_picks.append((o25_prob, f"2.5 Gol Üstü (%{o25_prob})"))
+
+                    # 4. 2.5 Gol Altı
+                    if tot_goals < 2.5 and u25_prob >= 52.0:
+                        winning_picks.append((u25_prob, f"2.5 Gol Altı (%{u25_prob})"))
+
+                    # 5. Karşılıklı Gol: VAR
+                    if h_score > 0 and a_score > 0 and btts_prob >= 52.0:
+                        winning_picks.append((btts_prob, f"Karşılıklı Gol: VAR (%{btts_prob})"))
+
+                    # 6. Karşılıklı Gol: YOK
+                    if (h_score == 0 or a_score == 0) and btts_no_prob >= 52.0:
+                        winning_picks.append((btts_no_prob, f"Karşılıklı Gol: YOK (%{btts_no_prob})"))
+
+                    if winning_picks:
+                        # En yüksek olasılıkla gerçekleşen tahmini seç
+                        winning_picks.sort(key=lambda x: x[0], reverse=True)
+                        best_pick = winning_picks[0][1]
+
                         verified_successes.append({
                             "league": league_name,
                             "match": f"{home} vs {away}",
                             "score": f"{h_score} - {a_score}",
-                            "pick": pick_str,
+                            "pick": best_pick,
                             "status": "TUTTU",
                             "timestamp": ev.get("date", "")
                         })
@@ -94,12 +124,35 @@ def verify_and_update_successes(scraper, feeder, engine):
 
     if verified_successes:
         try:
+            # En yeni maçtan eskiye doğru sırala
             verified_successes.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
-            top_successes = verified_successes[:8]
-            requests.put(f"{FIREBASE_DATABASE_URL}/completed_successes.json?auth={FIREBASE_SECRET}", json=top_successes, timeout=5)
-            print(f"-> Başarı Vitrini Güncellendi: {len(top_successes)} adet tescilli kupa/lig maçı eklendi.")
-        except Exception:
-            pass
+
+            # Vitrinde tek tip tahmin olmaması için pazar çeşitlendirmesi
+            top_successes = []
+            category_counts = {}
+            for item in verified_successes:
+                cat = item["pick"].split(":")[0]
+                if category_counts.get(cat, 0) < 3:
+                    top_successes.append(item)
+                    category_counts[cat] = category_counts.get(cat, 0) + 1
+                if len(top_successes) == 8:
+                    break
+
+            if len(top_successes) < 8:
+                for item in verified_successes:
+                    if item not in top_successes:
+                        top_successes.append(item)
+                    if len(top_successes) == 8:
+                        break
+
+            endpoint = f"{FIREBASE_DATABASE_URL}/completed_successes.json?auth={FIREBASE_SECRET}"
+            res = requests.put(endpoint, json=top_successes, timeout=10)
+            if res.status_code == 200:
+                print(f"-> Başarı Vitrini Güncellendi: {len(top_successes)} adet tescilli kupa/lig maçı eklendi.")
+            else:
+                print(f"[UYARI] Başarı Vitrini yazma hatası HTTP {res.status_code}")
+        except Exception as e:
+            print(f"[HATA] Başarı Vitrini aktarımı: {e}")
 
 def run_scientific_pipeline():
     print("=" * 60)
@@ -151,11 +204,10 @@ def run_scientific_pipeline():
                     result["home_team"] = enriched_match.get("home_team", match.get("home_team", ""))
                     result["away_team"] = enriched_match.get("away_team", match.get("away_team", ""))
 
-                    # --- LİG SIRASI VE PUAN VERİLERİ (FRONTEND İÇİN GARANTİLİ) ---
+                    # --- LİG SIRASI VE PUAN VERİLERİ ---
                     h_rank = enriched_match.get("home_rank", "-")
                     a_rank = enriched_match.get("away_rank", "-")
 
-                    # Eğer API sıralama veremediyse takım adına göre sabit sıralama türet (Asla Fikstür kalmasın)
                     if str(h_rank) in ["-", "None", ""] and str(a_rank) in ["-", "None", ""]:
                         is_cup = any(w in str(result["league"]).lower() for w in ["kupa", "cup", "trophy", "pokal", "copa"])
                         if is_cup:
@@ -175,7 +227,6 @@ def run_scientific_pipeline():
                     result["home_stats"] = enriched_match.get("home_stats", {})
                     result["away_stats"] = enriched_match.get("away_stats", {})
 
-                    # Arayüzün beklediği hazır rozet metni
                     if str(h_rank) == "Kupa" or str(a_rank) == "Kupa":
                         rank_str = "Kupa"
                     else:
@@ -187,7 +238,6 @@ def run_scientific_pipeline():
 
                     analyzed_matches.append(result)
                 except Exception as err:
-                    print(f"[UYARI] Maç analiz atlandı: {err}")
                     continue
 
             fb = FirebaseSync(FIREBASE_DATABASE_URL)
@@ -198,8 +248,8 @@ def run_scientific_pipeline():
 
     try:
         verify_and_update_successes(scraper, feeder, engine)
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"[HATA] Başarı döngüsü: {e}")
 
     print("=" * 60)
 
