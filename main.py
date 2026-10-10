@@ -109,138 +109,131 @@ def generate_and_push_daily_coupons(analyzed_matches, fb_database_url, fb_secret
         print(f"[HATA] Günün Kuponları motoru: {e}")
 
 def verify_and_update_successes(scraper, feeder, engine):
-    print("-> Biten kupa ve lig maçları taranıyor (Son 5 gün)...")
+    print("-> Biten kupa, milli ve lig maçları taranıyor (Son 3 gün)...")
     verified_successes = []
 
     key_leagues = [
+        ("UEFA Uluslar Ligi", "uefa.nations"),
+        ("Dünya Kupası Elemeleri", "fifa.worldq.conmebol"),
         ("Trendyol Süper Lig", "tur.1"),
         ("Premier League", "eng.1"),
+        ("İngiltere League One", "eng.3"),
         ("La Liga", "esp.1"),
         ("Serie A", "ita.1"),
         ("Bundesliga", "ger.1"),
         ("Fransa Ligue 1", "fra.1"),
         ("Brezilya Serie A", "bra.1"),
         ("Brezilya Serie B", "bra.2"),
-        ("UEFA Uluslar Ligi", "uefa.nations"),
-        ("Ziraat Türkiye Kupası", "tur.cup"),
-        ("EFL Trophy", "eng.trophy"),
-        ("FA Cup", "eng.fa"),
-        ("Copa del Rey", "esp.copa_del_rey"),
-        ("DFB-Pokal", "ger.dfb_pokal"),
-        ("Copa Libertadores", "conmebol.libertadores")
+        ("Japonya J1 League", "jpn.1")
     ]
 
-    end_dt = datetime.utcnow()
-    start_dt = end_dt - timedelta(days=5)
-    date_param = f"{start_dt.strftime('%Y%m%d')}-{end_dt.strftime('%Y%m%d')}"
+    # ESPN futbol API'si için son 3 gün tek tek sorgulanır (Aralık hatasını çözer)
+    now_dt = datetime.utcnow()
+    target_dates = [
+        (now_dt - timedelta(days=i)).strftime("%Y%m%d") for i in range(3)
+    ]
 
     for league_name, league_slug in key_leagues:
-        url = f"https://site.api.espn.com/apis/site/v2/sports/soccer/{league_slug}/scoreboard?dates={date_param}"
-        try:
-            res = requests.get(url, headers=scraper.headers, timeout=6)
-            if res.status_code != 200:
-                continue
-
-            events = res.json().get("events", [])
-            for ev in events:
-                try:
-                    status_obj = ev.get("status", {})
-                    type_obj = status_obj.get("type", {})
-                    
-                    if not (type_obj.get("completed", False) or type_obj.get("state") == "post"):
-                        continue
-
-                    competitions = ev.get("competitions", [])
-                    if not competitions: continue
-                    competitors = competitions[0].get("competitors", [])
-                    if len(competitors) < 2: continue
-
-                    home_c = next((c for c in competitors if c.get("homeAway") == "home"), competitors[0])
-                    away_c = next((c for c in competitors if c.get("homeAway") == "away"), competitors[1])
-
-                    home = home_c.get("team", {}).get("displayName", "")
-                    away = away_c.get("team", {}).get("displayName", "")
-                    if not home or not away: continue
-
-                    h_score = int(home_c.get("score") or 0)
-                    a_score = int(away_c.get("score") or 0)
-                    tot_goals = h_score + a_score
-
-                    mock_match = {"league": league_name, "home_team": home, "away_team": away, "is_live": False}
-                    enriched = feeder.enrich_match_data(mock_match)
-                    analysis = engine.analyze_match(enriched).get("analysis", {})
-
-                    o25_prob = float(analysis.get("over_25", 0.0))
-                    u25_prob = round(100.0 - o25_prob, 1)
-                    ms_h_prob = float(analysis.get("ms_home", 0.0))
-                    ms_a_prob = float(analysis.get("ms_away", 0.0))
-                    btts_prob = float(analysis.get("btts_yes", 0.0))
-                    btts_no_prob = round(100.0 - btts_prob, 1)
-
-                    winning_picks = []
-
-                    if h_score > a_score and ms_h_prob >= 46.0:
-                        winning_picks.append((ms_h_prob, f"MS 1: {home} (%{ms_h_prob})"))
-
-                    if a_score > h_score and ms_a_prob >= 40.0:
-                        winning_picks.append((ms_a_prob, f"MS 2: {away} (%{ms_a_prob})"))
-
-                    if tot_goals > 2.5 and o25_prob >= 52.0:
-                        winning_picks.append((o25_prob, f"2.5 Gol Üstü (%{o25_prob})"))
-
-                    if tot_goals < 2.5 and u25_prob >= 52.0:
-                        winning_picks.append((u25_prob, f"2.5 Gol Altı (%{u25_prob})"))
-
-                    if h_score > 0 and a_score > 0 and btts_prob >= 52.0:
-                        winning_picks.append((btts_prob, f"Karşılıklı Gol: VAR (%{btts_prob})"))
-
-                    if (h_score == 0 or a_score == 0) and btts_no_prob >= 52.0:
-                        winning_picks.append((btts_no_prob, f"Karşılıklı Gol: YOK (%{btts_no_prob})"))
-
-                    if winning_picks:
-                        winning_picks.sort(key=lambda x: x[0], reverse=True)
-                        best_pick = winning_picks[0][1]
-
-                        verified_successes.append({
-                            "league": league_name,
-                            "match": f"{home} vs {away}",
-                            "score": f"{h_score} - {a_score}",
-                            "pick": best_pick,
-                            "status": "TUTTU",
-                            "timestamp": ev.get("date", "")
-                        })
-                except Exception:
+        for d_str in target_dates:
+            url = f"https://site.api.espn.com/apis/site/v2/sports/soccer/{league_slug}/scoreboard?dates={d_str}"
+            try:
+                res = requests.get(url, headers=scraper.headers, timeout=5)
+                if res.status_code != 200:
                     continue
-        except Exception:
-            continue
+
+                events = res.json().get("events", [])
+                for ev in events:
+                    try:
+                        status_obj = ev.get("status", {})
+                        type_obj = status_obj.get("type", {})
+                        
+                        if not (type_obj.get("completed", False) or type_obj.get("state") == "post"):
+                            continue
+
+                        competitions = ev.get("competitions", [])
+                        if not competitions: continue
+                        competitors = competitions[0].get("competitors", [])
+                        if len(competitors) < 2: continue
+
+                        home_c = next((c for c in competitors if c.get("homeAway") == "home"), competitors[0])
+                        away_c = next((c for c in competitors if c.get("homeAway") == "away"), competitors[1])
+
+                        home = home_c.get("team", {}).get("displayName", "")
+                        away = away_c.get("team", {}).get("displayName", "")
+                        if not home or not away: continue
+
+                        h_score = int(home_c.get("score") or 0)
+                        a_score = int(away_c.get("score") or 0)
+                        tot_goals = h_score + a_score
+
+                        mock_match = {"league": league_name, "home_team": home, "away_team": away, "is_live": False}
+                        enriched = feeder.enrich_match_data(mock_match)
+                        analysis = engine.analyze_match(enriched).get("analysis", {})
+
+                        o25_prob = float(analysis.get("over_25", 0.0))
+                        u25_prob = round(100.0 - o25_prob, 1)
+                        ms_h_prob = float(analysis.get("ms_home", 0.0))
+                        ms_a_prob = float(analysis.get("ms_away", 0.0))
+                        btts_prob = float(analysis.get("btts_yes", 0.0))
+                        btts_no_prob = round(100.0 - btts_prob, 1)
+
+                        winning_picks = []
+
+                        # 1. MS 1
+                        if h_score > a_score and ms_h_prob >= 46.0:
+                            winning_picks.append((ms_h_prob, f"MS 1: {home} (%{ms_h_prob})"))
+
+                        # 2. MS 2
+                        if a_score > h_score and ms_a_prob >= 40.0:
+                            winning_picks.append((ms_a_prob, f"MS 2: {away} (%{ms_a_prob})"))
+
+                        # 3. 2.5 Gol Üstü
+                        if tot_goals > 2.5 and o25_prob >= 52.0:
+                            winning_picks.append((o25_prob, f"2.5 Gol Üstü (%{o25_prob})"))
+
+                        # 4. 2.5 Gol Altı
+                        if tot_goals < 2.5 and u25_prob >= 52.0:
+                            winning_picks.append((u25_prob, f"2.5 Gol Altı (%{u25_prob})"))
+
+                        # 5. Karşılıklı Gol: VAR
+                        if h_score > 0 and a_score > 0 and btts_prob >= 52.0:
+                            winning_picks.append((btts_prob, f"Karşılıklı Gol: VAR (%{btts_prob})"))
+
+                        if winning_picks:
+                            winning_picks.sort(key=lambda x: x[0], reverse=True)
+                            best_pick = winning_picks[0][1]
+
+                            verified_successes.append({
+                                "league": league_name,
+                                "match": f"{home} vs {away}",
+                                "score": f"{h_score} - {a_score}",
+                                "pick": best_pick,
+                                "status": "TUTTU",
+                                "timestamp": ev.get("date", d_str)
+                            })
+                    except Exception:
+                        continue
+            except Exception:
+                continue
 
     if verified_successes:
         try:
-            verified_successes.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
-
-            top_successes = []
-            category_counts = {}
+            # En son oynanan maçlara göre sırala ve tekilleştir
+            verified_successes.sort(key=lambda x: str(x.get("timestamp", "")), reverse=True)
+            
+            seen_matches = set()
+            unique_successes = []
             for item in verified_successes:
-                cat = item["pick"].split(":")[0]
-                if category_counts.get(cat, 0) < 3:
-                    top_successes.append(item)
-                    category_counts[cat] = category_counts.get(cat, 0) + 1
-                if len(top_successes) == 8:
+                if item["match"] not in seen_matches:
+                    seen_matches.add(item["match"])
+                    unique_successes.append(item)
+                if len(unique_successes) == 8:
                     break
 
-            if len(top_successes) < 8:
-                for item in verified_successes:
-                    if item not in top_successes:
-                        top_successes.append(item)
-                    if len(top_successes) == 8:
-                        break
-
             endpoint = f"{FIREBASE_DATABASE_URL}/completed_successes.json?auth={FIREBASE_SECRET}"
-            res = requests.put(endpoint, json=top_successes, timeout=10)
+            res = requests.put(endpoint, json=unique_successes, timeout=10)
             if res.status_code == 200:
-                print(f"-> Başarı Vitrini Güncellendi: {len(top_successes)} adet tescilli kupa/lig maçı eklendi.")
-            else:
-                print(f"[UYARI] Başarı Vitrini yazma hatası HTTP {res.status_code}")
+                print(f"-> Başarı Vitrini Güncellendi: {len(unique_successes)} adet taze maç Firebase'e işlendi.")
         except Exception as e:
             print(f"[HATA] Başarı Vitrini aktarımı: {e}")
 
