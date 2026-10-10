@@ -1,271 +1,227 @@
 import math
-import re
 
 class SportsAnalyticsEngine:
-    def __init__(self, rho=-0.13):
-        # Dixon-Coles düşük skor korelasyon sabiti
-        self.rho = rho
+    def __init__(self):
+        # Dixon-Coles düşük skor bağımlılık parametresi (Dünya futbolu medyan değeri)
+        self.rho = -0.11
+        # Yarı gol dağılım katsayıları
+        self.first_half_ratio = 0.44
+        self.second_half_ratio = 0.56
 
-        # Global Liglerin Gerçek Karakteristik Gol Ortalamaları (Ev Sahibi xG, Deplasman xG)
-        self.league_baselines = {
-            # TÜRKİYE
-            "Trendyol Süper Lig": (1.52, 1.18),
-            "Trendyol 1. Lig": (1.38, 1.05),
-            "Ziraat Türkiye Kupası": (1.65, 1.25),
+    def _poisson_pmf(self, k, lambd):
+        """Temel Poisson Olasılık Kütle Fonksiyonu: P(X=k) = (lambda^k * e^-lambda) / k!"""
+        if lambd <= 0:
+            return 1.0 if k == 0 else 0.0
+        return (math.pow(lambd, k) * math.exp(-lambd)) / math.factorial(k)
 
-            # İNGİLTERE
-            "Premier League": (1.65, 1.28),
-            "İngiltere Championship": (1.42, 1.16),
-            "İngiltere League One": (1.44, 1.18),
-            "İngiltere League Two": (1.40, 1.15),
-            "FA Cup": (1.60, 1.25),
-            "EFL Carabao Cup": (1.58, 1.22),
-            "EFL Trophy": (1.62, 1.30),
-
-            # İSPANYA
-            "La Liga": (1.46, 1.10),
-            "La Liga 2": (1.20, 0.85),
-            "Copa del Rey": (1.55, 1.15),
-
-            # İTALYA
-            "Serie A": (1.48, 1.14),
-            "Serie B": (1.26, 0.94),
-            "Coppa Italia": (1.55, 1.15),
-
-            # ALMANYA
-            "Bundesliga": (1.78, 1.36),
-            "Bundesliga 2": (1.66, 1.32),
-            "DFB-Pokal": (1.85, 1.35),
-
-            # FRANSA
-            "Fransa Ligue 1": (1.48, 1.16),
-            "Fransa Ligue 2": (1.24, 0.92),
-            "Coupe de France": (1.58, 1.18),
-
-            # HOLLANDA & DİĞER AVRUPA
-            "Hollanda Eredivisie": (1.82, 1.38),
-            "Hollanda KNVB Beker": (1.85, 1.40),
-            "Portekiz Liga NOS": (1.45, 1.08),
-            "Portekiz Taça de Portugal": (1.52, 1.12),
-            "Belçika Pro League": (1.60, 1.28),
-            "Belçika Kupası": (1.65, 1.30),
-            "İskoçya Premiership": (1.50, 1.15),
-            "Avusturya Bundesliga": (1.62, 1.28),
-            "İsviçre Süper Ligi": (1.68, 1.34),
-            "Danimarka Superliga": (1.54, 1.22),
-            "Yunanistan Süper Ligi": (1.38, 0.95),
-
-            # UEFA & ULUSLARARASI
-            "UEFA Şampiyonlar Ligi": (1.68, 1.26),
-            "UEFA Avrupa Ligi": (1.62, 1.24),
-            "UEFA Konferans Ligi": (1.60, 1.22),
-            "UEFA Uluslar Ligi": (1.45, 1.10),
-            "Dünya Kupası Elemeleri (Avrupa)": (1.65, 1.15),
-            "Dünya Kupası Elemeleri (G.Amerika)": (1.35, 0.92),
-
-            # GÜNEY AMERİKA & DÜNYA (Genelde Düşük Skor Karakterli)
-            "Brezilya Serie A": (1.38, 0.98),
-            "Brezilya Serie B": (1.22, 0.86),
-            "Copa do Brasil": (1.42, 1.00),
-            "Arjantin Liga Profesional": (1.18, 0.84),
-            "Copa Argentina": (1.22, 0.88),
-            "Copa Libertadores": (1.45, 0.95),
-            "Copa Sudamericana": (1.42, 0.92),
-            "Meksika Liga MX": (1.55, 1.18),
-            "ABD MLS": (1.68, 1.30),
-            "Suudi Arabistan Pro Lig": (1.64, 1.28),
-            "Japonya J1 League": (1.42, 1.12)
-        }
-
-        # Global Elit / Güçlü Kulüpler (Ekstra Güç Çarpanı Alırlar)
-        self.tier1_clubs = {
-            "Real Madrid", "Barcelona", "Manchester City", "Arsenal", "Liverpool", 
-            "Bayern Munich", "Bayer Leverkusen", "Paris Saint-Germain", "Inter Milan", 
-            "Juventus", "Galatasaray", "Fenerbahçe", "Benfica", "Sporting CP", "Porto",
-            "Flamengo", "Palmeiras", "Atlético Mineiro", "River Plate", "Boca Juniors",
-            "Al Hilal", "Al Nassr"
-        }
-
-    def _poisson(self, k, lamb):
-        try:
-            if lamb <= 0:
-                return 1.0 if k == 0 else 0.0
-            return (math.exp(-lamb) * (lamb ** k)) / math.factorial(k)
-        except Exception:
-            return 0.0
-
-    def _dixon_coles_tau(self, x, y, lambda_h, mu_a):
-        try:
-            if x == 0 and y == 0: val = 1.0 - (lambda_h * mu_a * self.rho)
-            elif x == 0 and y == 1: val = 1.0 + (lambda_h * self.rho)
-            elif x == 1 and y == 0: val = 1.0 + (mu_a * self.rho)
-            elif x == 1 and y == 1: val = 1.0 - self.rho
-            else: val = 1.0
-            return max(0.01, val) # Negatif olasılık koruması
-        except Exception:
+    def _dixon_coles_tau(self, x, y, lambda_val, mu_val):
+        """
+        Dixon & Coles (1997) Düşük Skor Düzeltme Matrisi
+        0-0, 1-0, 0-1 ve 1-1 skorlarının gerçek dünya korelasyonunu ayarlar.
+        """
+        if x == 0 and y == 0:
+            return max(0.0, 1.0 - (lambda_val * mu_val * self.rho))
+        elif x == 0 and y == 1:
+            return max(0.0, 1.0 + (lambda_val * self.rho))
+        elif x == 1 and y == 0:
+            return max(0.0, 1.0 + (mu_val * self.rho))
+        elif x == 1 and y == 1:
+            return max(0.0, 1.0 - self.rho)
+        else:
             return 1.0
 
-    def _parse_minute(self, clock_str):
-        if not clock_str: return 0
-        m = re.search(r'\d+', str(clock_str))
-        return int(m.group()) if m else 0
+    def _build_dixon_coles_matrix(self, lambda_home, lambda_away, max_goals=7):
+        """
+        Ev sahibi ve Deplasman için ortak Dixon-Coles olasılık matrisini kurar.
+        """
+        matrix = [[0.0 for _ in range(max_goals + 1)] for _ in range(max_goals + 1)]
+        total_prob = 0.0
 
-    def _estimate_team_powers(self, home_team, away_team, league_name):
-        base_h, base_a = self.league_baselines.get(league_name, (1.50, 1.15))
-        h_mult, a_mult = 1.0, 1.0
+        for h in range(max_goals + 1):
+            p_h = self._poisson_pmf(h, lambda_home)
+            for a in range(max_goals + 1):
+                p_a = self._poisson_pmf(a, lambda_away)
+                tau = self._dixon_coles_tau(h, a, lambda_home, lambda_away)
+                
+                cell_prob = p_h * p_a * tau
+                matrix[h][a] = cell_prob
+                total_prob += cell_prob
 
-        # Elit Kulüp Teşhisi
-        if any(c.lower() in home_team.lower() for c in self.tier1_clubs):
-            h_mult += 0.28
-            a_mult -= 0.15
+        # Matrisi %100'e normalize et (kesme payı düzeltmesi)
+        if total_prob > 0:
+            for h in range(max_goals + 1):
+                for a in range(max_goals + 1):
+                    matrix[h][a] /= total_prob
 
-        if any(c.lower() in away_team.lower() for c in self.tier1_clubs):
-            a_mult += 0.28
-            h_mult -= 0.15
+        return matrix
 
-        h_xg = max(0.35, base_h * h_mult)
-        a_xg = max(0.25, base_a * a_mult)
-        return h_xg, a_xg
-
-    def analyze_match(self, match_data):
-        home_team = match_data.get("home_team") or "Ev Sahibi"
-        away_team = match_data.get("away_team") or "Deplasman"
-        league_name = match_data.get("league") or ""
+    def _calculate_confidence_score(self, ms_h, ms_x, ms_a, total_xg):
+        """
+        Model Entropisi ve Olasılık Keskinliği Analizi (0 - 100 arası Güven Skoru)
+        """
+        # En yüksek ihtimalin büyüklüğü (Dağılım ne kadar tek bir tarafa meylediyorsa güven o kadar yüksektir)
+        max_outcome = max(ms_h, ms_x, ms_a)
         
-        is_live = match_data.get("is_live", False)
-        live_clock = match_data.get("live_clock", "0'")
+        # 33-33-33 gibi yazı-tura benzeri maçlarda güveni düşürür
+        edge_score = (max_outcome - 33.3) * 2.1
         
-        try: cur_h = int(match_data.get("home_score") or 0)
-        except: cur_h = 0
+        # Çok aşırı xG uç değerlerine karşı filtre
+        xg_penalty = 0.0
+        if total_xg < 1.2 or total_xg > 4.2:
+            xg_penalty = 8.0
 
-        try: cur_a = int(match_data.get("away_score") or 0)
-        except: cur_a = 0
+        raw_conf = 50.0 + edge_score - xg_penalty
+        return max(35, min(96, round(raw_conf)))
 
-        try: h_reds = int(match_data.get("home_reds") or 0)
-        except: h_reds = 0
+    def analyze_match(self, match):
+        h_stats = match.get("home_stats", {})
+        a_stats = match.get("away_stats", {})
 
-        try: a_reds = int(match_data.get("away_reds") or 0)
-        except: a_reds = 0
+        # Gol beklentileri (xG)
+        lambda_h = max(0.40, float(h_stats.get("calc_xg", 1.35)))
+        lambda_a = max(0.35, float(a_stats.get("calc_xg", 1.15)))
 
-        # Lig bazlı ve takım güçlerine göre dinamik xG hesabı
-        h_xg, a_xg = self._estimate_team_powers(home_team, away_team, league_name)
+        # Canlı maç kırmızı kart çarpanı (In-Play kuralı)
+        h_reds = int(match.get("home_reds", 0))
+        a_reds = int(match.get("away_reds", 0))
+        if h_reds > 0:
+            lambda_h *= max(0.4, 1.0 - (h_reds * 0.32))
+            lambda_a *= (1.0 + (h_reds * 0.22))
+        if a_reds > 0:
+            lambda_a *= max(0.4, 1.0 - (a_reds * 0.32))
+            lambda_h *= (1.0 + (a_reds * 0.22))
 
-        # CANLI MAÇ KALİBRASYONU (Zaman Sönümlemesi ve Kırmızı Kart)
-        if is_live:
-            minute = self._parse_minute(live_clock)
-            rem_ratio = max(0.04, (95 - minute) / 90.0)
-            if h_reds > 0:
-                h_xg *= (0.65 ** h_reds)
-                a_xg *= (1.30 ** h_reds)
-            if a_reds > 0:
-                a_xg *= (0.65 ** a_reds)
-                h_xg *= (1.30 ** a_reds)
-            rem_h_xg = h_xg * rem_ratio
-            rem_a_xg = a_xg * rem_ratio
-        else:
-            rem_h_xg = h_xg
-            rem_a_xg = a_xg
+        # 1. 90 DAKİKA DİXON-COLES MATRİSİ
+        matrix_90 = self._build_dixon_coles_matrix(lambda_h, lambda_a, max_goals=7)
 
-        # Devre Beklentileri
-        h_1h, a_1h = rem_h_xg * 0.45, rem_a_xg * 0.45
-        h_2h, a_2h = rem_h_xg * 0.55, rem_a_xg * 0.55
+        ms_home_prob = 0.0
+        ms_draw_prob = 0.0
+        ms_away_prob = 0.0
 
-        ms_h, ms_d, ms_a = 0.0, 0.0, 0.0
-        o15, o25, o35 = 0.0, 0.0, 0.0
-        btts_yes = 0.0
-        matrix = []
+        o15_prob = 0.0
+        o25_prob = 0.0
+        o35_prob = 0.0
+        btts_yes_prob = 0.0
 
-        # TAM 49 MATRİS DÖNGÜSÜ (0'dan 6'ya: 7x7 = 49 Skor)
-        for gh in range(7):
-            for ga in range(7):
-                p = self._poisson(gh, rem_h_xg) * self._poisson(ga, rem_a_xg) * self._dixon_coles_tau(gh, ga, rem_h_xg, rem_a_xg)
-                final_h = cur_h + gh
-                final_a = cur_a + ga
+        scores_list = []
 
-                if final_h > final_a: ms_h += p
-                elif final_h == final_a: ms_d += p
-                else: ms_a += p
+        for h in range(8):
+            for a in range(8):
+                prob = matrix_90[h][a]
 
-                tg = final_h + final_a
-                if tg > 1.5: o15 += p
-                if tg > 2.5: o25 += p
-                if tg > 3.5: o35 += p
-                if final_h > 0 and final_a > 0: btts_yes += p
+                # Maç Sonu
+                if h > a: ms_home_prob += prob
+                elif h == a: ms_draw_prob += prob
+                else: ms_away_prob += prob
 
-                matrix.append((f"{final_h}-{final_a}", p))
+                # Gol Baremleri
+                tot = h + a
+                if tot > 1.5: o15_prob += prob
+                if tot > 2.5: o25_prob += prob
+                if tot > 3.5: o35_prob += prob
 
-        # 1. Yarı Olasılıkları
-        iy_h, iy_d, iy_a = 0.0, 0.0, 0.0
+                # Karşılıklı Gol
+                if h > 0 and a > 0:
+                    btts_yes_prob += prob
+
+                scores_list.append((f"{h}-{a}", prob))
+
+        # 2. İLK YARI (İY) DİXON-COLES MATRİSİ
+        lambda_h_iy = lambda_h * self.first_half_ratio
+        lambda_a_iy = lambda_a * self.first_half_ratio
+        matrix_iy = self._build_dixon_coles_matrix(lambda_h_iy, lambda_a_iy, max_goals=4)
+
+        iy_home_prob, iy_draw_prob, iy_away_prob, iy_o05_prob = 0.0, 0.0, 0.0, 0.0
         for h in range(5):
             for a in range(5):
-                p = self._poisson(h, h_1h) * self._poisson(a, a_1h)
-                if h > a: iy_h += p
-                elif h == a: iy_d += p
-                else: iy_a += p
+                prob_iy = matrix_iy[h][a]
+                if h > a: iy_home_prob += prob_iy
+                elif h == a: iy_draw_prob += prob_iy
+                else: iy_away_prob += prob_iy
+                if (h + a) > 0.5: iy_o05_prob += prob_iy
 
-        # 2. Yarı Gerçek Poisson Olasılıkları
-        y2_h, y2_d, y2_a = 0.0, 0.0, 0.0
+        # 3. İKİNCİ YARI (2Y) MATRİSİ
+        lambda_h_2y = lambda_h * self.second_half_ratio
+        lambda_a_2y = lambda_a * self.second_half_ratio
+        matrix_2y = self._build_dixon_coles_matrix(lambda_h_2y, lambda_a_2y, max_goals=4)
+
+        y2_home_prob, y2_draw_prob, y2_away_prob = 0.0, 0.0, 0.0
         for h in range(5):
             for a in range(5):
-                p = self._poisson(h, h_2h) * self._poisson(a, a_2h)
-                if h > a: y2_h += p
-                elif h == a: y2_d += p
-                else: y2_a += p
+                prob_2y = matrix_2y[h][a]
+                if h > a: y2_home_prob += prob_2y
+                elif h == a: y2_draw_prob += prob_2y
+                else: y2_away_prob += prob_2y
 
-        tot_ms = max(0.0001, ms_h + ms_d + ms_a)
-        tot_iy = max(0.0001, iy_h + iy_d + iy_a)
-        tot_y2 = max(0.0001, y2_h + y2_d + y2_a)
+        # Yüzdeleri yuvarla
+        def pct(v): return round(v * 100.0, 1)
 
-        p_home = round((ms_h / tot_ms) * 100, 1)
-        p_draw = round((ms_d / tot_ms) * 100, 1)
-        p_away = round((ms_a / tot_ms) * 100, 1)
+        ms_h_pct = pct(ms_home_prob)
+        ms_x_pct = pct(ms_draw_prob)
+        ms_a_pct = pct(ms_away_prob)
 
-        volatility_warning = None
-        if h_reds > 0 or a_reds > 0:
-            red_team = home_team if h_reds > 0 else away_team
-            volatility_warning = f"⚠️ KIRMIZI KART: {red_team} sahada eksik! Canlı olasılıklar 10 kişiye göre hesaplandı."
-        elif abs(p_home - p_away) < 7.0:
-            volatility_warning = "YÜKSEK VOLATİLİTE: İki takımın kazanma ihtimali birbirine çok yakın. Modelimiz taraf tercihi yerine Gol / Devre seçeneklerine odaklanmanızı önerir."
+        o15_pct = pct(o15_prob)
+        o25_pct = pct(o25_prob)
+        o35_pct = pct(o35_prob)
+        btts_pct = pct(btts_yes_prob)
 
-        matrix.sort(key=lambda x: x[1], reverse=True)
+        # En olası ilk 3 skor
+        scores_list.sort(key=lambda x: x[1], reverse=True)
         top_scores = [
-            {"score": s[0], "prob": f"%{round((s[1]/tot_ms)*100, 1)}"}
-            for s in matrix[:3]
+            {"score": s[0], "prob": f"%{pct(s[1])}"} for s in scores_list[:3]
         ]
 
-        return {
-            "match": f"{home_team} vs {away_team}",
-            "home_team": home_team,
-            "away_team": away_team,
-            "is_live": is_live,
-            "live_clock": live_clock,
-            "live_score": f"{cur_h} - {cur_a}" if is_live else "",
-            "home_reds": h_reds,
-            "away_reds": a_reds,
-            "volatility_warning": volatility_warning,
-            "analysis": {
-                "ms_home": p_home,
-                "ms_draw": p_draw,
-                "ms_away": p_away,
-                "iy_home": round((iy_h / tot_iy) * 100, 1),
-                "iy_draw": round((iy_d / tot_iy) * 100, 1),
-                "iy_away": round((iy_a / tot_iy) * 100, 1),
-                "y2_home": round((y2_h / tot_y2) * 100, 1),
-                "y2_draw": round((y2_d / tot_y2) * 100, 1),
-                "y2_away": round((y2_a / tot_y2) * 100, 1),
-                "over_15": round((o15 / tot_ms) * 100, 1),
-                "over_25": round((o25 / tot_ms) * 100, 1),
-                "over_35": round((o35 / tot_ms) * 100, 1),
-                "btts_yes": round((btts_yes / tot_ms) * 100, 1),
-                "btts_no": round((1.0 - (btts_yes / tot_ms)) * 100, 1)
-            },
-            "top_scores": top_scores,
-            "team_details": {
-                "home_rank": "-",
-                "away_rank": "-",
-                "home_points": "-",
-                "away_points": "-",
-                "home_form": ["G", "B", "G", "M", "G"],
-                "away_form": ["M", "B", "G", "M", "B"]
-            }
+        # Güven Endeksi
+        total_xg = lambda_h + lambda_a
+        confidence = self._calculate_confidence_score(ms_h_pct, ms_x_pct, ms_a_pct, total_xg)
+
+        # En güçlü istatistiksel tercih (Telegram sinyalleri için çekirdek alan)
+        picks_ranking = [
+            ("MS 1", ms_h_pct, ms_h_pct >= 48.0),
+            ("MS 2", ms_a_pct, ms_a_pct >= 42.0),
+            ("2.5 ÜST", o25_pct, o25_pct >= 53.0),
+            ("2.5 ALT", round(100.0 - o25_pct, 1), (100.0 - o25_pct) >= 53.0),
+            ("KG VAR", btts_pct, btts_pct >= 53.0),
+            ("İY 0.5 ÜST", pct(iy_o05_prob), pct(iy_o05_prob) >= 65.0),
+            ("1X ÇŞ", round(ms_h_pct + ms_x_pct, 1), (ms_h_pct + ms_x_pct) >= 72.0)
+        ]
+        valid_picks = [p for p in picks_ranking if p[2]]
+        valid_picks.sort(key=lambda x: x[1], reverse=True)
+        strongest_pick = f"{valid_picks[0][0]} (%{valid_picks[0][1]})" if valid_picks else f"2.5 ÜST (%{o25_pct})"
+
+        # Volatilite uyarısı
+        volatility_warning = None
+        if h_reds > 0 or a_reds > 0:
+            volatility_warning = f"DİKKAT: Sahada kırmızı kart var ({h_reds}K - {a_reds}K). Sayısal dengeler yeniden hesaplandı."
+        elif abs(ms_h_pct - ms_a_pct) < 4.0 and o25_pct > 58.0:
+            volatility_warning = "YÜKSEK VOLATİLİTE: İki takımın kazanma ihtimali birbirine çok yakın, taraf yerine barem tercih edilebilir."
+
+        result = dict(match)
+        result["confidence_score"] = confidence
+        result["strongest_pick"] = strongest_pick
+        result["top_scores"] = top_scores
+        result["volatility_warning"] = volatility_warning
+        result["analysis"] = {
+            "lambda_home": round(lambda_h, 2),
+            "lambda_away": round(lambda_a, 2),
+            "total_expected_goals": round(total_xg, 2),
+            "ms_home": ms_h_pct,
+            "ms_draw": ms_x_pct,
+            "ms_away": ms_a_pct,
+            "cs_1x": round(ms_h_pct + ms_x_pct, 1),
+            "cs_x2": round(ms_x_pct + ms_a_pct, 1),
+            "iy_home": pct(iy_home_prob),
+            "iy_draw": pct(iy_draw_prob),
+            "iy_away": pct(iy_away_prob),
+            "iy_over_05": pct(iy_o05_prob),
+            "y2_home": pct(y2_home_prob),
+            "y2_draw": pct(y2_draw_prob),
+            "y2_away": pct(y2_away_prob),
+            "over_15": o15_pct,
+            "over_25": o25_pct,
+            "over_35": o35_pct,
+            "under_25": round(100.0 - o25_pct, 1),
+            "btts_yes": btts_pct,
+            "btts_no": round(100.0 - btts_pct, 1)
         }
+        return result
