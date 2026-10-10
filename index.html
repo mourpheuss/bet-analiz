@@ -11,16 +11,16 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --bg-deep: #050811;
-            --bg-surface: rgba(11, 18, 32, 0.82);
-            --bg-card: rgba(15, 23, 42, 0.75);
-            --bg-row-hover: rgba(0, 255, 136, 0.08);
-            --border-line: rgba(255, 255, 255, 0.1);
+            --bg-deep: #0f172a;
+            --bg-surface: #1e293b;
+            --bg-card: #1e293b;
+            --bg-row-hover: #273549;
+            --border-line: #334155;
             --text-pure: #ffffff;
             --text-sub: #94a3b8;
             --accent-green: #00ff88;
             --accent-green-glow: rgba(0, 255, 136, 0.35);
-            --accent-cyan: #00d2ff;
+            --accent-cyan: #38bdf8;
             --accent-purple: #a855f7;
             --accent-amber: #f59e0b;
             --accent-red: #ff3366;
@@ -29,16 +29,18 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        /* FERAH VE GÖZ YORMAYAN SLATE TABAN */
         body {
-    margin: 0;
-    padding: 0;
-    min-height: 100vh;
-    font-family: var(--font-main);
-    color: #e2e8f0;
-    background-color: #0b1120;
-    background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, #0b1120 70%);
-    background-attachment: fixed;
-}
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            font-family: var(--font-main);
+            color: #f1f5f9;
+            background-color: #0f172a;
+            background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, #0f172a 75%);
+            background-attachment: fixed;
+        }
 
         .container { max-width: 1260px; margin: 0 auto; padding: 1.5rem; }
         .hidden { display: none !important; }
@@ -47,8 +49,8 @@
         .landing-hero-wrapper {
             position: relative;
             background-image: 
-                radial-gradient(circle at 50% 20%, rgba(0, 255, 136, 0.18) 0%, transparent 60%),
-                linear-gradient(180deg, rgba(5, 8, 17, 0.35) 0%, rgba(5, 8, 17, 0.8) 60%, var(--bg-deep) 100%),
+                radial-gradient(circle at 50% 20%, rgba(0, 255, 136, 0.15) 0%, transparent 60%),
+                linear-gradient(180deg, rgba(15, 23, 42, 0.75) 0%, #0f172a 100%),
                 url('https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=2200&q=85');
             background-size: cover;
             background-position: center 35%;
@@ -62,7 +64,7 @@
             justify-content: space-between;
             align-items: center;
             padding: 1.5rem 0 3rem 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+            border-bottom: 1px solid var(--border-line);
             flex-wrap: wrap;
             gap: 1rem;
             position: relative;
@@ -80,7 +82,7 @@
             justify-content: center;
             color: #060911;
             font-size: 1.35rem;
-            box-shadow: 0 0 30px var(--accent-green-glow);
+            box-shadow: 0 0 25px var(--accent-green-glow);
         }
 
         .hero-clean {
@@ -95,8 +97,8 @@
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            background: rgba(5, 8, 17, 0.7);
-            border: 1px solid rgba(0, 255, 136, 0.45);
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid rgba(0, 255, 136, 0.4);
             color: var(--accent-green);
             padding: 0.55rem 1.4rem;
             border-radius: 999px;
@@ -112,7 +114,7 @@
             line-height: 1.08;
             letter-spacing: -0.03em;
             margin-bottom: 1.5rem;
-            text-shadow: 0 6px 35px rgba(0, 0, 0, 0.95);
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
         }
 
         .hero-title span {
@@ -146,17 +148,16 @@
             display: inline-flex;
             align-items: center;
             gap: 0.65rem;
-            box-shadow: 0 0 40px var(--accent-green-glow);
+            box-shadow: 0 0 30px var(--accent-green-glow);
             transition: all 0.25s ease;
         }
 
-        .btn-glow:hover { transform: translateY(-3px); box-shadow: 0 0 60px rgba(0, 255, 136, 0.65); }
+        .btn-glow:hover { transform: translateY(-2px); box-shadow: 0 0 45px rgba(0, 255, 136, 0.6); }
 
         .btn-outline {
-            background: rgba(5, 8, 17, 0.65);
-            backdrop-filter: blur(14px);
+            background: #1e293b;
             color: var(--text-pure);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid var(--border-line);
             font-weight: 800;
             font-size: 1.02rem;
             padding: 1.1rem 2.2rem;
@@ -170,7 +171,7 @@
         .track-record-section { margin: 4.5rem 0; }
         .track-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; }
         .track-card {
-            background: var(--bg-surface);
+            background: #1e293b;
             border: 1px solid var(--border-line);
             border-radius: 16px;
             padding: 1.35rem;
@@ -191,7 +192,7 @@
         .badge-verified { background: var(--accent-green); color: #060911; font-size: 0.75rem; font-weight: 900; padding: 4px 9px; border-radius: 6px; }
 
         .disclaimer-banner {
-            background: rgba(11, 18, 32, 0.7);
+            background: #1e293b;
             border: 1px solid var(--border-line);
             border-radius: 16px;
             padding: 1.6rem;
@@ -201,84 +202,12 @@
             line-height: 1.65;
         }
 
-        /* TERMİNAL */
-       .terminal-stadium-wrapper {
-    position: relative;
-    background: transparent;
-    min-height: 100vh;
-}
-
-/* OKUNAKLI, FERAH VE NET PANELLER */
-.terminal-controls,
-.kpi-card,
-.match-row,
-#coupons-container > div {
-    background: #141d2e !important;
-    border: 1px solid #23334d !important;
-    border-radius: 14px !important;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
-}
-
-/* KUPON MAÇ KUTULARI */
-#coupons-container div[style*="background: rgba(5, 8, 17"] {
-    background: #0d1522 !important;
-    border: 1px solid #1e2c42 !important;
-}
-
-/* SATIR ÜZERİNE GELME EFEKTİ */
-.match-row:hover {
-    background: #1a263c !important;
-    border-color: var(--accent-green) !important;
-}
-
-/* 2. NET, PÜRÜZSÜZ VE OKUNAKLI KART PANELLERİ */
-.terminal-controls,
-.kpi-card,
-.match-row,
-#coupons-container > div {
-    background: #111827 !important;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    border-radius: 16px !important;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
-}
-
-/* KUPONLARIN İÇİNDEKİ MAÇ KUTULARI */
-#coupons-container div[style*="background: rgba(5, 8, 17"] {
-    background: #0d131f !important;
-    border: 1px solid rgba(255, 255, 255, 0.06) !important;
-}
-
-/* MAÇ LİSTESİNDE ÜZERİNE GELİNCE YANAN TEMİZ EFEKT */
-.match-row:hover {
-    background: #172033 !important;
-    border-color: rgba(0, 255, 136, 0.4) !important;
-}
-
-/* KARTLARIN ARKA PLANINI ŞEFFAFLAŞTIRIP ZEMİNLE BÜTÜNLEŞTİRME */
-.terminal-controls,
-.kpi-card,
-.match-row,
-#coupons-container > div {
-    background: rgba(11, 22, 38, 0.58) !important;
-    backdrop-filter: blur(14px) !important;
-    -webkit-backdrop-filter: blur(14px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
-    border-top: 1px solid rgba(0, 255, 136, 0.35) !important;
-    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4) !important;
-}
-
-/* KARTLARI AYDINLATAN BUZLU CAM EFEKTİ */
-.terminal-controls,
-.kpi-card,
-.match-row,
-#coupons-container > div {
-    background: rgba(13, 22, 38, 0.68) !important;
-    backdrop-filter: blur(18px) !important;
-    -webkit-backdrop-filter: blur(18px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    border-top: 1px solid rgba(0, 255, 136, 0.22) !important;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35) !important;
-}
+        /* TERMİNAL WRAPPER & PANELLER */
+        .terminal-stadium-wrapper {
+            position: relative;
+            background: transparent;
+            min-height: 100vh;
+        }
 
         .terminal-header {
             display: flex;
@@ -301,14 +230,14 @@
         @media (max-width: 900px) { .terminal-kpi-bar { grid-template-columns: 1fr 1fr; } }
 
         .kpi-card {
-            background: rgba(11, 18, 32, 0.75);
-            backdrop-filter: blur(14px);
+            background: #1e293b;
             border: 1px solid var(--border-line);
             border-radius: 14px;
             padding: 1rem 1.25rem;
             display: flex;
             align-items: center;
             gap: 1rem;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
         }
 
         .kpi-icon {
@@ -328,19 +257,19 @@
             display: flex;
             flex-direction: column;
             gap: 1rem;
-            background: rgba(11, 18, 32, 0.75);
-            backdrop-filter: blur(14px);
+            background: #1e293b;
             border: 1px solid var(--border-line);
             border-radius: 18px;
             padding: 1.25rem;
             margin-bottom: 1.5rem;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
         }
 
         .search-container {
             display: flex;
             align-items: center;
             gap: 0.75rem;
-            background: rgba(5, 8, 17, 0.85);
+            background: #0f172a;
             border: 1px solid var(--border-line);
             border-radius: 12px;
             padding: 0.85rem 1.25rem;
@@ -357,7 +286,7 @@
 
         .date-pills-bar { display: flex; gap: 0.6rem; overflow-x: auto; padding-bottom: 4px; }
         .date-pill {
-            background: rgba(255, 255, 255, 0.04);
+            background: #0f172a;
             border: 1px solid var(--border-line);
             color: var(--text-sub);
             padding: 0.6rem 1.2rem;
@@ -392,33 +321,51 @@
             grid-template-columns: 100px 105px 1.4fr 2fr 130px 140px;
             gap: 1rem;
             align-items: center;
-            background: rgba(11, 18, 32, 0.7);
-            backdrop-filter: blur(14px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: #1e293b;
+            border: 1px solid var(--border-line);
             border-radius: 16px;
             padding: 1.1rem 1.4rem;
             margin-bottom: 0.75rem;
             cursor: pointer;
-            transition: all 0.22s ease;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
         }
 
         @media (max-width: 960px) { .match-row { grid-template-columns: 1fr; gap: 0.75rem; } }
-        .match-row:hover { border-color: var(--accent-green); background: rgba(15, 23, 42, 0.85); transform: translateY(-2px); }
+        .match-row:hover { border-color: var(--accent-green); background: #273549; transform: translateY(-1px); }
 
         .match-row.row-live {
             border-left: 4px solid var(--accent-red);
-            background: rgba(255, 51, 102, 0.04);
+            background: rgba(255, 51, 102, 0.05);
         }
 
         .matchup-container { display: flex; align-items: center; gap: 0.6rem; font-weight: 800; font-size: 1.05rem; }
-        .vs-badge { background: rgba(255, 255, 255, 0.06); color: var(--accent-cyan); font-size: 0.7rem; font-family: var(--font-code); padding: 2px 7px; border-radius: 6px; font-weight: 900; }
-        .badge-code { display: inline-block; background: rgba(0, 210, 255, 0.1); border: 1px solid rgba(0, 210, 255, 0.3); color: var(--accent-cyan); font-family: var(--font-code); font-weight: 800; font-size: 0.85rem; padding: 5px 10px; border-radius: 8px; }
+        .vs-badge { background: #0f172a; border: 1px solid var(--border-line); color: var(--accent-cyan); font-size: 0.7rem; font-family: var(--font-code); padding: 2px 7px; border-radius: 6px; font-weight: 900; }
+        
+        /* CANLI PARLAYAN SKOR KUTUSU */
+        .badge-live-score {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 51, 102, 0.16);
+            border: 1px solid #ff3366;
+            color: #ff3366;
+            font-family: var(--font-code);
+            font-size: 0.95rem;
+            font-weight: 900;
+            padding: 3px 10px;
+            border-radius: 8px;
+            letter-spacing: 1px;
+            box-shadow: 0 0 10px rgba(255, 51, 102, 0.3);
+        }
+
+        .badge-code { display: inline-block; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); color: var(--accent-cyan); font-family: var(--font-code); font-weight: 800; font-size: 0.85rem; padding: 5px 10px; border-radius: 8px; }
 
         .badge-time {
             display: inline-flex;
             align-items: center;
             gap: 0.4rem;
-            background: rgba(255, 255, 255, 0.05);
+            background: #0f172a;
             border: 1px solid var(--border-line);
             color: #fff;
             font-family: var(--font-code);
@@ -452,7 +399,7 @@
         .card-red-indicator { color: var(--accent-red); font-size: 0.75rem; margin-left: 3px; }
 
         .btn-report-action {
-            background: linear-gradient(135deg, rgba(0, 255, 136, 0.12), rgba(0, 210, 255, 0.12));
+            background: rgba(0, 255, 136, 0.1);
             border: 1px solid rgba(0, 255, 136, 0.35);
             color: var(--accent-green);
             padding: 7px 14px;
@@ -462,13 +409,14 @@
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
+            transition: all 0.2s;
         }
         .match-row:hover .btn-report-action { background: var(--accent-green); color: #060911; }
 
         /* YÖNETİCİ */
         .admin-nav-tabs { display: flex; gap: 0.75rem; }
         .admin-tab-btn { background: transparent; border: none; color: var(--text-sub); font-size: 0.9rem; font-weight: 700; padding: 0.6rem 1.2rem; border-radius: 10px; cursor: pointer; }
-        .admin-tab-btn.active { background: rgba(255, 255, 255, 0.06); color: var(--accent-amber); border: 1px solid rgba(245, 158, 11, 0.3); }
+        .admin-tab-btn.active { background: #0f172a; color: var(--accent-amber); border: 1px solid rgba(245, 158, 11, 0.3); }
 
         .btn-whatsapp-notify { background: #25d366; color: #060911; padding: 6px 12px; border-radius: 8px; font-weight: 800; font-size: 0.75rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.3rem; margin-left: 0.4rem; }
         .admin-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left; }
@@ -480,8 +428,8 @@
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(4, 7, 14, 0.92);
-            backdrop-filter: blur(18px);
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(12px);
             z-index: 2000;
             align-items: center;
             justify-content: center;
@@ -489,8 +437,8 @@
         }
         .modal.active { display: flex; }
         .modal-box {
-            background: var(--bg-surface);
-            border: 1px solid rgba(0, 255, 136, 0.3);
+            background: #1e293b;
+            border: 1px solid var(--border-line);
             border-radius: 24px;
             width: 100%;
             max-width: 740px;
@@ -498,6 +446,7 @@
             max-height: 90vh;
             overflow-y: auto;
             position: relative;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
         }
 
         .volatility-box {
@@ -514,22 +463,22 @@
             gap: 0.6rem;
         }
 
-        .card-panel { background: rgba(6, 9, 17, 0.75); border: 1px solid var(--border-line); border-radius: 16px; padding: 1.25rem; margin-bottom: 1.25rem; }
-        .prob-bar-container { height: 10px; border-radius: 6px; overflow: hidden; display: flex; background: #1e293b; margin: 0.65rem 0; }
+        .card-panel { background: #0f172a; border: 1px solid var(--border-line); border-radius: 16px; padding: 1.25rem; margin-bottom: 1.25rem; }
+        .prob-bar-container { height: 10px; border-radius: 6px; overflow: hidden; display: flex; background: #334155; margin: 0.65rem 0; }
         .form-badge { display: inline-flex; width: 24px; height: 24px; align-items: center; justify-content: center; border-radius: 6px; font-size: 0.75rem; font-weight: 800; margin-right: 4px; }
         .form-G { background: #059669; color: #fff; }
         .form-B { background: #64748b; color: #fff; }
         .form-M { background: #e11d48; color: #fff; }
 
         .stat-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; text-align: center; }
-        .stat-box { background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-line); border-radius: 12px; padding: 0.75rem; }
+        .stat-box { background: #1e293b; border: 1px solid var(--border-line); border-radius: 12px; padding: 0.75rem; }
         .stat-box span { font-size: 0.75rem; color: var(--text-sub); display: block; margin-bottom: 0.3rem; }
         .stat-box strong { font-size: 1.25rem; font-family: var(--font-code); color: var(--accent-green); }
 
         /* KOPYALANABİLİR ÖDEME KARTI */
         .mas-copy-box {
-            background: #141d27;
-            border: 1px solid #233446;
+            background: #0f172a;
+            border: 1px solid var(--border-line);
             border-radius: 12px;
             padding: 12px 14px;
             display: flex;
@@ -613,7 +562,7 @@
                     <span style="color:var(--accent-green); font-size:0.8rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em;">DOĞRULANMIŞ PERFORMANS</span>
                     <h3 style="font-size:1.8rem; font-weight:900; margin-top:0.2rem;">Geçmiş Model Başarılarımız</h3>
                 </div>
-                <span style="font-family:var(--font-code); font-size:0.85rem; color:var(--text-sub); background:rgba(255,255,255,0.04); padding:6px 12px; border-radius:8px; border:1px solid var(--border-line);">
+                <span style="font-family:var(--font-code); font-size:0.85rem; color:var(--text-sub); background: #1e293b; padding:6px 12px; border-radius:8px; border:1px solid var(--border-line);">
                     Doğrulanmış İsabet Oranı: <strong style="color:var(--accent-green);">%78.4</strong>
                 </span>
             </div>
@@ -662,7 +611,7 @@
                 </div>
             </div>
             <div class="kpi-card">
-                <div class="kpi-icon" style="background:rgba(0,210,255,0.12); color:var(--accent-cyan);"><i class="fa-solid fa-diagram-project"></i></div>
+                <div class="kpi-icon" style="background:rgba(56,189,248,0.12); color:var(--accent-cyan);"><i class="fa-solid fa-diagram-project"></i></div>
                 <div>
                     <div class="kpi-val" style="color:var(--accent-cyan);">49 MATRİS</div>
                     <div class="kpi-label">Matematiksel Model</div>
@@ -684,7 +633,7 @@
             </div>
         </div>
 
-        <!-- GÜNÜN ALGORİTMİK KUPONLARI VİTRİNİ (YENİ) -->
+        <!-- GÜNÜN ALGORİTMİK KUPONLARI VİTRİNİ -->
         <div id="coupons-section" style="margin-bottom: 2rem; display: none;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
                 <div style="display: flex; align-items: center; gap: 8px;">
@@ -744,13 +693,13 @@
             </button>
         </div>
 
-        <div style="background: var(--bg-surface); border: 1px solid var(--border-line); border-radius: 10px; padding: 0.4rem 0.8rem; display: flex; align-items: center; gap: 0.5rem; width: 320px;">
+        <div style="background: #1e293b; border: 1px solid var(--border-line); border-radius: 10px; padding: 0.4rem 0.8rem; display: flex; align-items: center; gap: 0.5rem; width: 320px;">
             <i class="fa-solid fa-magnifying-glass" style="font-size: 0.8rem; color: var(--text-sub);"></i>
             <input type="text" id="admin-user-search" oninput="handleAdminUserSearch(event)" placeholder="Kullanıcı, Tel veya Gönderen ara..." style="background: transparent; border: none; color: #fff; font-size: 0.82rem; width: 100%; outline: none;">
         </div>
     </div>
 
-    <div style="background: var(--bg-surface); border: 1px solid var(--border-line); border-radius: 18px; overflow-x: auto;">
+    <div style="background: #1e293b; border: 1px solid var(--border-line); border-radius: 18px; overflow-x: auto;">
         <table class="admin-table">
             <thead>
                 <tr>
@@ -788,13 +737,13 @@
                 <i class="fa-solid fa-table-list"></i> Puan Durumu & Son 5 Maçlık Form
             </h4>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                <div style="background: rgba(255,255,255,0.02); padding: 0.8rem; border-radius: 10px;">
+                <div style="background: #1e293b; padding: 0.8rem; border-radius: 10px; border: 1px solid var(--border-line);">
                     <strong id="rep-home-name" style="color: var(--accent-cyan); display:block; margin-bottom:0.4rem;">Ev Sahibi</strong>
                     <div style="font-size: 0.82rem; color: #fff; margin-bottom: 0.3rem;">Lig Sıralaması: <strong id="rep-home-rank" style="color:var(--accent-green); font-family:var(--font-code);">-</strong></div>
                     <div style="font-size: 0.8rem; color: var(--text-sub); margin-bottom: 0.4rem;">Puan: <strong id="rep-home-pts" style="color:#fff;">-</strong></div>
                     <div>Son 5 Maç: <span id="rep-home-form"></span></div>
                 </div>
-                <div style="background: rgba(255,255,255,0.02); padding: 0.8rem; border-radius: 10px;">
+                <div style="background: #1e293b; padding: 0.8rem; border-radius: 10px; border: 1px solid var(--border-line);">
                     <strong id="rep-away-name" style="color: var(--accent-amber); display:block; margin-bottom:0.4rem;">Deplasman</strong>
                     <div style="font-size: 0.82rem; color: #fff; margin-bottom: 0.3rem;">Lig Sıralaması: <strong id="rep-away-rank" style="color:var(--accent-green); font-family:var(--font-code);">-</strong></div>
                     <div style="font-size: 0.8rem; color: var(--text-sub); margin-bottom: 0.4rem;">Puan: <strong id="rep-away-pts" style="color:#fff;">-</strong></div>
@@ -854,7 +803,7 @@
             </div>
         </div>
 
-        <div style="display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.03); border:1px solid var(--border-line); padding:0.85rem 1.25rem; border-radius:14px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; background:#0f172a; border:1px solid var(--border-line); padding:0.85rem 1.25rem; border-radius:14px;">
             <span style="font-size:0.82rem; font-weight:800; color:var(--text-sub);">EN OLASI SKORLAR:</span>
             <div id="rep-top-scores" style="display:flex; gap:0.5rem; font-family:var(--font-code);"></div>
         </div>
@@ -900,7 +849,6 @@
             </button>
         </div>
 
-        <!-- FOTOĞRAFTAKİ ÖNEMLİ UYARI KUTUSU (GÜNCELLENDİ) -->
         <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.25); color: #fbbf24; padding: 10px; border-radius: 10px; font-size: 0.78rem; margin: 1.2rem 0; line-height: 1.4;">
             <i class="fa-solid fa-circle-exclamation"></i> <strong>Önemli:</strong> Transfer açıklamasına lütfen <strong>"Web Yazılım Bedeli"</strong> ile birlikte <strong>kullanıcı adınızı</strong> giriniz. <span style="color: #94a3b8; display: block; margin-top: 4px;">(Örnek: Web Yazılım Bedeli - kullaniciadi)</span>
         </div>
@@ -920,8 +868,8 @@
 <div id="modal-login" class="modal" onclick="closeOnBackdrop(event, 'modal-login')">
     <div class="modal-box" style="max-width: 400px;" onclick="event.stopPropagation()">
         <h3 style="font-size: 1.25rem; margin-bottom: 1rem;">PRO Girişi</h3>
-        <input type="text" id="login-user" placeholder="Kullanıcı Adı" style="width:100%; background:rgba(0,0,0,0.4); border:1px solid var(--border-line); padding:0.8rem; border-radius:10px; color:#fff; margin-bottom:0.75rem; outline:none;">
-        <input type="password" id="login-pass" placeholder="Şifre" style="width:100%; background:rgba(0,0,0,0.4); border:1px solid var(--border-line); padding:0.8rem; border-radius:10px; color:#fff; margin-bottom:0.75rem; outline:none;">
+        <input type="text" id="login-user" placeholder="Kullanıcı Adı" style="width:100%; background:#0f172a; border:1px solid var(--border-line); padding:0.8rem; border-radius:10px; color:#fff; margin-bottom:0.75rem; outline:none;">
+        <input type="password" id="login-pass" placeholder="Şifre" style="width:100%; background:#0f172a; border:1px solid var(--border-line); padding:0.8rem; border-radius:10px; color:#fff; margin-bottom:0.75rem; outline:none;">
         
         <div style="text-align:right; margin-bottom:1.25rem;">
             <a href="#" onclick="closeModal('modal-login'); openModal('modal-forgot-password');" style="color:var(--text-sub); font-size:0.78rem; text-decoration:underline;">Şifremi Unuttum?</a>
@@ -936,9 +884,9 @@
         <h3 style="font-size: 1.2rem; font-weight:900; margin-bottom:0.4rem;">Şifre Sıfırlama</h3>
         <p style="font-size: 0.8rem; color: var(--text-sub); margin-bottom: 1.2rem;">Kayıtlı kullanıcı adı ve telefonunuzu doğrulayarak yeni şifrenizi belirleyin.</p>
 
-        <input type="text" id="forgot-user" placeholder="Kullanıcı Adınız" style="width:100%; background:rgba(0,0,0,0.4); border:1px solid var(--border-line); padding:0.75rem; border-radius:10px; color:#fff; margin-bottom:0.6rem; outline:none;">
-        <input type="text" id="forgot-phone" placeholder="Kayıtlı WhatsApp Tel No" style="width:100%; background:rgba(0,0,0,0.4); border:1px solid var(--border-line); padding:0.75rem; border-radius:10px; color:#fff; margin-bottom:0.6rem; outline:none;">
-        <input type="password" id="forgot-new-pass" placeholder="Yeni Şifreniz" style="width:100%; background:rgba(0,0,0,0.4); border:1px solid var(--border-line); padding:0.75rem; border-radius:10px; color:#fff; margin-bottom:1.25rem; outline:none;">
+        <input type="text" id="forgot-user" placeholder="Kullanıcı Adınız" style="width:100%; background:#0f172a; border:1px solid var(--border-line); padding:0.75rem; border-radius:10px; color:#fff; margin-bottom:0.6rem; outline:none;">
+        <input type="text" id="forgot-phone" placeholder="Kayıtlı WhatsApp Tel No" style="width:100%; background:#0f172a; border:1px solid var(--border-line); padding:0.75rem; border-radius:10px; color:#fff; margin-bottom:0.6rem; outline:none;">
+        <input type="password" id="forgot-new-pass" placeholder="Yeni Şifreniz" style="width:100%; background:#0f172a; border:1px solid var(--border-line); padding:0.75rem; border-radius:10px; color:#fff; margin-bottom:1.25rem; outline:none;">
 
         <button onclick="handleForgotPassword()" class="btn-glow" style="width:100%; justify-content:center; margin-bottom:0.75rem;">Şifremi Güncelle</button>
         <div style="text-align:center;">
@@ -952,8 +900,8 @@
         <h3 style="font-size: 1.2rem; font-weight:900; margin-bottom:0.4rem;">Şifre Değiştir</h3>
         <p style="font-size: 0.8rem; color: var(--text-sub); margin-bottom: 1.2rem;">Mevcut ve yeni şifrenizi giriniz.</p>
 
-        <input type="password" id="chg-curr-pass" placeholder="Mevcut Şifreniz" style="width:100%; background:rgba(0,0,0,0.4); border:1px solid var(--border-line); padding:0.75rem; border-radius:10px; color:#fff; margin-bottom:0.6rem; outline:none;">
-        <input type="password" id="chg-new-pass" placeholder="Yeni Şifreniz" style="width:100%; background:rgba(0,0,0,0.4); border:1px solid var(--border-line); padding:0.75rem; border-radius:10px; color:#fff; margin-bottom:1.25rem; outline:none;">
+        <input type="password" id="chg-curr-pass" placeholder="Mevcut Şifreniz" style="width:100%; background:#0f172a; border:1px solid var(--border-line); padding:0.75rem; border-radius:10px; color:#fff; margin-bottom:0.6rem; outline:none;">
+        <input type="password" id="chg-new-pass" placeholder="Yeni Şifreniz" style="width:100%; background:#0f172a; border:1px solid var(--border-line); padding:0.75rem; border-radius:10px; color:#fff; margin-bottom:1.25rem; outline:none;">
 
         <button onclick="handleChangePassword()" class="btn-glow" style="width:100%; justify-content:center;">Kaydet</button>
     </div>
@@ -973,10 +921,10 @@
             </a>
         </div>
         
-        <input type="text" id="reg-user" placeholder="Kullanıcı Adı" style="width:100%; background:rgba(0,0,0,0.4); border:1px solid var(--border-line); padding:0.75rem; border-radius:10px; color:#fff; margin-bottom:0.6rem; outline:none;">
-        <input type="password" id="reg-pass" placeholder="Şifre" style="width:100%; background:rgba(0,0,0,0.4); border:1px solid var(--border-line); padding:0.75rem; border-radius:10px; color:#fff; margin-bottom:0.6rem; outline:none;">
-        <input type="text" id="reg-phone" placeholder="WhatsApp Tel No (Örn: 05321234567)" style="width:100%; background:rgba(0,0,0,0.4); border:1px solid var(--border-line); padding:0.75rem; border-radius:10px; color:#fff; margin-bottom:0.6rem; outline:none;">
-        <input type="text" id="reg-shopier" placeholder="Havale Yapan Ad Soyad / Gönderen Adı" style="width:100%; background:rgba(0,0,0,0.4); border:1px solid var(--border-line); padding:0.75rem; border-radius:10px; color:#fff; margin-bottom:1rem; outline:none;">
+        <input type="text" id="reg-user" placeholder="Kullanıcı Adı" style="width:100%; background:#0f172a; border:1px solid var(--border-line); padding:0.75rem; border-radius:10px; color:#fff; margin-bottom:0.6rem; outline:none;">
+        <input type="password" id="reg-pass" placeholder="Şifre" style="width:100%; background:#0f172a; border:1px solid var(--border-line); padding:0.75rem; border-radius:10px; color:#fff; margin-bottom:0.6rem; outline:none;">
+        <input type="text" id="reg-phone" placeholder="WhatsApp Tel No (Örn: 05321234567)" style="width:100%; background:#0f172a; border:1px solid var(--border-line); padding:0.75rem; border-radius:10px; color:#fff; margin-bottom:0.6rem; outline:none;">
+        <input type="text" id="reg-shopier" placeholder="Havale Yapan Ad Soyad / Gönderen Adı" style="width:100%; background:#0f172a; border:1px solid var(--border-line); padding:0.75rem; border-radius:10px; color:#fff; margin-bottom:1rem; outline:none;">
 
         <div style="display: flex; align-items: flex-start; gap: 0.6rem; margin-bottom: 1.2rem; font-size: 0.78rem; color: var(--text-sub);">
             <input type="checkbox" id="reg-agreement" style="margin-top: 3px; accent-color: var(--accent-green); cursor:pointer;">
@@ -992,7 +940,7 @@
 <div id="modal-admin-auth" class="modal" onclick="closeOnBackdrop(event, 'modal-admin-auth')">
     <div class="modal-box" style="max-width: 380px;" onclick="event.stopPropagation()">
         <h3 style="font-size: 1.2rem; color: var(--accent-amber); margin-bottom: 0.5rem;"><i class="fa-solid fa-lock"></i> Yönetici Girişi</h3>
-        <input type="password" id="admin-pass-input" placeholder="••••••••" style="width:100%; background:rgba(0,0,0,0.4); border:1px solid var(--border-line); padding:0.8rem; border-radius:10px; color:#fff; margin-bottom:1rem; outline:none;">
+        <input type="password" id="admin-pass-input" placeholder="••••••••" style="width:100%; background:#0f172a; border:1px solid var(--border-line); padding:0.8rem; border-radius:10px; color:#fff; margin-bottom:1rem; outline:none;">
         <button onclick="handleAdminAuth()" class="btn-glow" style="width:100%; justify-content:center; background:var(--accent-amber); color:#000;">Giriş</button>
     </div>
 </div>
@@ -1094,7 +1042,7 @@
 
             const couponDefs = [
                 { key: 'banko', data: data.banko, icon: 'fa-shield-halved', color: 'var(--accent-green)', borderGlow: 'rgba(0, 255, 136, 0.3)' },
-                { key: 'ideal', data: data.ideal, icon: 'fa-bolt', color: 'var(--accent-cyan)', borderGlow: 'rgba(0, 210, 255, 0.3)' },
+                { key: 'ideal', data: data.ideal, icon: 'fa-bolt', color: 'var(--accent-cyan)', borderGlow: 'rgba(56, 189, 248, 0.3)' },
                 { key: 'goals', data: data.goals, icon: 'fa-fire-flame-curved', color: 'var(--accent-amber)', borderGlow: 'rgba(245, 158, 11, 0.3)' }
             ];
 
@@ -1109,7 +1057,7 @@
                     totalConf += (m.confidence || 75);
                     const timeOnly = (m.date || '').split(' ')[1] || 'TSİ';
                     matchesHtml += `
-                        <div style="background: rgba(5, 8, 17, 0.65); border: 1px solid var(--border-line); border-radius: 12px; padding: 10px 12px; margin-bottom: 8px;">
+                        <div style="background: #0f172a; border: 1px solid var(--border-line); border-radius: 12px; padding: 10px 12px; margin-bottom: 8px;">
                             <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.73rem; color:var(--text-sub); margin-bottom:5px;">
                                 <span style="font-weight:700;"><i class="fa-regular fa-futbol" style="font-size:0.68rem; margin-right:3px;"></i> ${m.league || 'Lig'}</span>
                                 <span style="color:var(--accent-cyan); font-family:var(--font-code); font-weight:700;">${timeOnly}</span>
@@ -1130,21 +1078,21 @@
                 const avgConf = Math.round(totalConf / item.matches.length);
 
                 container.innerHTML += `
-                    <div style="background: var(--bg-surface); backdrop-filter: blur(14px); border: 1px solid ${c.borderGlow}; border-radius: 18px; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div style="background: #1e293b; border: 1px solid ${c.borderGlow}; border-radius: 18px; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 4px 16px rgba(0,0,0,0.2);">
                         <div>
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem;">
                                 <div style="display:flex; align-items:center; gap:8px;">
                                     <i class="fa-solid ${c.icon}" style="color:${c.color}; font-size:1.1rem;"></i>
                                     <h4 style="margin:0; font-size:1rem; font-weight:900; color:#fff;">${item.title}</h4>
                                 </div>
-                                <span style="background:rgba(255,255,255,0.06); border:1px solid var(--border-line); color:${c.color}; font-size:0.7rem; font-weight:800; padding:2px 8px; border-radius:6px; font-family:var(--font-code);">
+                                <span style="background:#0f172a; border:1px solid var(--border-line); color:${c.color}; font-size:0.7rem; font-weight:800; padding:2px 8px; border-radius:6px; font-family:var(--font-code);">
                                     ${item.matches.length} MAÇ
                                 </span>
                             </div>
                             <p style="font-size:0.76rem; color:var(--text-sub); margin:0 0 1rem 0; line-height:1.4;">${item.desc}</p>
                             <div>${matchesHtml}</div>
                         </div>
-                        <div style="margin-top:0.8rem; padding-top:0.75rem; border-top:1px solid rgba(255,255,255,0.06); display:flex; justify-content:space-between; align-items:center; font-size:0.76rem; color:var(--text-sub);">
+                        <div style="margin-top:0.8rem; padding-top:0.75rem; border-top:1px solid var(--border-line); display:flex; justify-content:space-between; align-items:center; font-size:0.76rem; color:var(--text-sub);">
                             <span>Ortalama Model Güveni:</span>
                             <span style="font-family:var(--font-code); font-weight:800; color:${c.color};">%${avgConf}</span>
                         </div>
@@ -1540,7 +1488,7 @@
             const emptyNotice = selectedDateFilter === todayTsi 
                 ? "Bugün için bültende planlanmış maç bulunmuyor. 'Yarın' veya 'Tüm Maçlar' sekmesini inceleyebilirsiniz."
                 : "Seçilen filtrede karşılaşma bulunamadı.";
-            container.innerHTML = `<div style="text-align:center; padding:3rem; color:var(--text-sub); background:rgba(11,18,32,0.6); border-radius:16px;">${emptyNotice}</div>`;
+            container.innerHTML = `<div style="text-align:center; padding:3rem; color:var(--text-sub); background:#1e293b; border-radius:16px; border:1px solid var(--border-line);">${emptyNotice}</div>`;
             return;
         }
 
@@ -1564,9 +1512,18 @@
             const hTeam = teams[0] || m.home_team || 'Ev Sahibi';
             const aTeam = teams[1] || m.away_team || 'Deplasman';
 
-            const isLive = m.is_live;
+            const isLive = Boolean(m.is_live);
             const hReds = m.home_reds || 0;
             const aReds = m.away_reds || 0;
+
+            // CANLI SKOR TESPİTİ (GÜNCELLENDİ)
+            const hScore = (m.home_score !== undefined && m.home_score !== null) ? m.home_score : 0;
+            const aScore = (m.away_score !== undefined && m.away_score !== null) ? m.away_score : 0;
+            const liveScoreDisplay = `${hScore} - ${aScore}`;
+
+            const badgeMiddleHtml = isLive 
+                ? `<span class="badge-live-score">${liveScoreDisplay}</span>` 
+                : `<span class="vs-badge">VS</span>`;
 
             const row = document.createElement('div');
             row.className = `match-row ${isLive ? 'row-live' : ''}`;
@@ -1582,10 +1539,10 @@
                 <div style="font-size:0.84rem; color:var(--text-sub); font-weight:700;"><i class="fa-regular fa-circle-dot" style="color:var(--accent-green); font-size:0.65rem; margin-right:4px;"></i> ${m.league || 'Futbol'}</div>
                 <div class="matchup-container">
                     <span>${hTeam} ${hReds > 0 ? '<span class="card-red-indicator">🟥</span>' : ''}</span>
-                    <span class="vs-badge">${isLive ? (m.live_score || 'VS') : 'VS'}</span>
+                    ${badgeMiddleHtml}
                     <span>${aTeam} ${aReds > 0 ? '<span class="card-red-indicator">🟥</span>' : ''}</span>
                 </div>
-                <div><span style="background:rgba(255,255,255,0.05); border:1px solid var(--border-line); color:var(--accent-green); padding:4px 10px; border-radius:8px; font-size:0.75rem; font-weight:800; font-family:var(--font-code);">${rankText}</span></div>
+                <div><span style="background:#0f172a; border:1px solid var(--border-line); color:var(--accent-green); padding:4px 10px; border-radius:8px; font-size:0.75rem; font-weight:800; font-family:var(--font-code);">${rankText}</span></div>
                 <div style="text-align:right;"><span class="btn-report-action"><i class="fa-solid fa-chart-pie"></i> Raporu Aç</span></div>
             `;
             container.appendChild(row);
@@ -1596,7 +1553,10 @@
         const a = m.analysis || {};
         const td = m.team_details || {};
 
-        const statusTag = m.is_live ? `• CANLI (${m.live_clock} - ${m.live_score})` : '';
+        const hScore = (m.home_score !== undefined && m.home_score !== null) ? m.home_score : 0;
+        const aScore = (m.away_score !== undefined && m.away_score !== null) ? m.away_score : 0;
+        const statusTag = m.is_live ? `• CANLI (${m.live_clock || ''} - Skor: ${hScore}-${aScore})` : '';
+
         document.getElementById('rep-meta').innerText = `İDDAA KODU: ${m.match_id || '---'} • ${m.league || 'Futbol'} • ${m.date || ''} (TSİ) ${statusTag}`;
         document.getElementById('rep-title').innerText = m.match || `${m.home_team} vs ${m.away_team}`;
 
@@ -1645,7 +1605,7 @@
         const scoresDiv = document.getElementById('rep-top-scores');
         scoresDiv.innerHTML = '';
         (m.top_scores || [{score:"2-1", prob:"%14"}, {score:"1-1", prob:"%12"}, {score:"2-0", prob:"%10"}]).forEach(s => {
-            scoresDiv.innerHTML += `<span style="background:rgba(255,255,255,0.06); padding:3px 8px; border-radius:6px;"><strong>${s.score}</strong> (${s.prob})</span>`;
+            scoresDiv.innerHTML += `<span style="background:#1e293b; border:1px solid var(--border-line); padding:3px 8px; border-radius:6px;"><strong>${s.score}</strong> (${s.prob})</span>`;
         });
 
         openModal('modal-match-detail');
