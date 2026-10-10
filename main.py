@@ -8,6 +8,106 @@ from firebase_sync import FirebaseSync
 FIREBASE_DATABASE_URL = "https://analizsepeti-f3bb5-default-rtdb.firebaseio.com"
 FIREBASE_SECRET = "mZUATfv3TJqO6Ap8d1asrXemQIYqJflfYLzprmBS"
 
+def generate_and_push_daily_coupons(analyzed_matches, fb_database_url, fb_secret):
+    """
+    Dixon-Coles ve Güven Skoru çıktılarından en sağlam kombinasyonları filtreleyerek
+    günün 3 kupon varyasyonunu otomatik oluşturur ve Firebase'e yükler.
+    """
+    try:
+        # Canlı olmayan ve volatilite uyarısı taşımayan maçları filtrele
+        candidates = [
+            m for m in analyzed_matches 
+            if not m.get("is_live", False) and not m.get("volatility_warning")
+        ]
+        
+        # Eğer çok az maç kalırsa en azından canlı olmayan tüm maçları aday yap
+        if len(candidates) < 4:
+            candidates = [m for m in analyzed_matches if not m.get("is_live", False)]
+
+        if len(candidates) < 2:
+            print("-> Kupon üretimi için yeterli pre-match karşılaşma bulunamadı.")
+            return
+
+        # Güven skoruna göre büyükten küçüğe sırala
+        candidates.sort(key=lambda x: x.get("confidence_score", 0), reverse=True)
+
+        # 1. GÜNÜN KASA KUPONU (En yüksek güvenli 2 maç)
+        banko_matches = []
+        for m in candidates[:2]:
+            banko_matches.append({
+                "match": m.get("match", f"{m.get('home_team')} vs {m.get('away_team')}"),
+                "league": m.get("league", "Futbol"),
+                "date": m.get("date", ""),
+                "pick": m.get("strongest_pick", "MS 1"),
+                "confidence": m.get("confidence_score", 82)
+            })
+
+        # 2. GÜNÜN İDEAL KOMBİNESİ (Sonraki 3 sağlam maç)
+        ideal_pool = candidates[2:6] if len(candidates) >= 5 else candidates[:3]
+        ideal_matches = []
+        for m in ideal_pool[:3]:
+            ideal_matches.append({
+                "match": m.get("match", f"{m.get('home_team')} vs {m.get('away_team')}"),
+                "league": m.get("league", "Futbol"),
+                "date": m.get("date", ""),
+                "pick": m.get("strongest_pick", "2.5 ÜST"),
+                "confidence": m.get("confidence_score", 76)
+            })
+
+        # 3. GÜNÜN GOL DÜELLOSU (xG ve Gol beklentisi en yüksek 3 maç)
+        goal_candidates = sorted(
+            candidates,
+            key=lambda x: float(x.get("analysis", {}).get("total_expected_goals", 0)),
+            reverse=True
+        )
+        goal_matches = []
+        for m in goal_candidates[:3]:
+            a_data = m.get("analysis", {})
+            o25 = float(a_data.get("over_25", 0))
+            btts = float(a_data.get("btts_yes", 0))
+            if o25 >= 53.0:
+                pick_label = f"2.5 ÜST (%{o25})"
+            elif btts >= 53.0:
+                pick_label = f"KG VAR (%{btts})"
+            else:
+                pick_label = f"1.5 ÜST (%{a_data.get('over_15', 72)})"
+
+            goal_matches.append({
+                "match": m.get("match", f"{m.get('home_team')} vs {m.get('away_team')}"),
+                "league": m.get("league", "Futbol"),
+                "date": m.get("date", ""),
+                "pick": pick_label,
+                "confidence": m.get("confidence_score", 74)
+            })
+
+        coupons_payload = {
+            "updated_at": datetime.utcnow().strftime("%d.%m.%Y %H:%M TSİ"),
+            "banko": {
+                "title": "Günün Kasa Kuponu",
+                "desc": "Maksimum model güveni (%80+) ve düşük riskli tercihler",
+                "matches": banko_matches
+            },
+            "ideal": {
+                "title": "Günün İdeal Kombinesi",
+                "desc": "Yüksek xG üstünlüğüne sahip dengeli seçimler",
+                "matches": ideal_matches
+            },
+            "goals": {
+                "title": "Günün Gol Düellosu",
+                "desc": "Gol beklentisi (xG) tavan yapmış karşılaşmalar",
+                "matches": goal_matches
+            }
+        }
+
+        endpoint = f"{fb_database_url}/daily_coupons.json?auth={fb_secret}"
+        res = requests.put(endpoint, json=coupons_payload, timeout=8)
+        if res.status_code == 200:
+            print("-> Günün Algoritmik Kuponları Firebase'e başarıyla yüklendi.")
+        else:
+            print(f"[UYARI] Kupon yükleme hatası HTTP {res.status_code}")
+    except Exception as e:
+        print(f"[HATA] Günün Kuponları motoru: {e}")
+
 def verify_and_update_successes(scraper, feeder, engine):
     print("-> Biten kupa ve lig maçları taranıyor (Son 5 gün)...")
     verified_successes = []
@@ -30,7 +130,6 @@ def verify_and_update_successes(scraper, feeder, engine):
         ("Copa Libertadores", "conmebol.libertadores")
     ]
 
-    # Son 5 günün tamamını kapsayan tarih aralığı
     end_dt = datetime.utcnow()
     start_dt = end_dt - timedelta(days=5)
     date_param = f"{start_dt.strftime('%Y%m%d')}-{end_dt.strftime('%Y%m%d')}"
@@ -80,32 +179,25 @@ def verify_and_update_successes(scraper, feeder, engine):
 
                     winning_picks = []
 
-                    # 1. MS 1 (Ev Sahibi Galibiyeti)
                     if h_score > a_score and ms_h_prob >= 46.0:
                         winning_picks.append((ms_h_prob, f"MS 1: {home} (%{ms_h_prob})"))
 
-                    # 2. MS 2 (Deplasman Galibiyeti)
                     if a_score > h_score and ms_a_prob >= 40.0:
                         winning_picks.append((ms_a_prob, f"MS 2: {away} (%{ms_a_prob})"))
 
-                    # 3. 2.5 Gol Üstü
                     if tot_goals > 2.5 and o25_prob >= 52.0:
                         winning_picks.append((o25_prob, f"2.5 Gol Üstü (%{o25_prob})"))
 
-                    # 4. 2.5 Gol Altı
                     if tot_goals < 2.5 and u25_prob >= 52.0:
                         winning_picks.append((u25_prob, f"2.5 Gol Altı (%{u25_prob})"))
 
-                    # 5. Karşılıklı Gol: VAR
                     if h_score > 0 and a_score > 0 and btts_prob >= 52.0:
                         winning_picks.append((btts_prob, f"Karşılıklı Gol: VAR (%{btts_prob})"))
 
-                    # 6. Karşılıklı Gol: YOK
                     if (h_score == 0 or a_score == 0) and btts_no_prob >= 52.0:
                         winning_picks.append((btts_no_prob, f"Karşılıklı Gol: YOK (%{btts_no_prob})"))
 
                     if winning_picks:
-                        # En yüksek olasılıkla gerçekleşen tahmini seç
                         winning_picks.sort(key=lambda x: x[0], reverse=True)
                         best_pick = winning_picks[0][1]
 
@@ -124,10 +216,8 @@ def verify_and_update_successes(scraper, feeder, engine):
 
     if verified_successes:
         try:
-            # En yeni maçtan eskiye doğru sırala
             verified_successes.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
 
-            # Vitrinde tek tip tahmin olmaması için pazar çeşitlendirmesi
             top_successes = []
             category_counts = {}
             for item in verified_successes:
@@ -167,7 +257,6 @@ def run_scientific_pipeline():
         raw_matches = scraper.fetch_live_bulletin()
         print(f"-> Scraper'dan gelen toplam ham bülten: {len(raw_matches)}")
 
-        # --- GÜVENLİ TEKİLLEŞTİRME (Sadece gerçek aynı takım eşleşmelerini eler) ---
         seen_pairs = set()
         deduped_matches = []
         for match in raw_matches:
@@ -191,7 +280,6 @@ def run_scientific_pipeline():
                     enriched_match = feeder.enrich_match_data(match)
                     result = engine.analyze_match(enriched_match)
                     
-                    # Temel Karşılaşma Bilgileri
                     result["match_id"] = enriched_match.get("match_id", match.get("match_id", "40100"))
                     result["date"] = enriched_match.get("start_time", match.get("start_time", ""))
                     result["league"] = enriched_match.get("league", match.get("league", "Futbol"))
@@ -204,7 +292,6 @@ def run_scientific_pipeline():
                     result["home_team"] = enriched_match.get("home_team", match.get("home_team", ""))
                     result["away_team"] = enriched_match.get("away_team", match.get("away_team", ""))
 
-                    # --- LİG SIRASI VE PUAN VERİLERİ ---
                     h_rank = enriched_match.get("home_rank", "-")
                     a_rank = enriched_match.get("away_rank", "-")
 
@@ -243,6 +330,10 @@ def run_scientific_pipeline():
             fb = FirebaseSync(FIREBASE_DATABASE_URL)
             fb.push_analyzed_matches(analyzed_matches)
             print(f"-> {len(analyzed_matches)} maçın olasılık analizi tamamlandı ve Firebase'e yüklendi.")
+
+            # GÜNÜN KUPONLARINI OLUŞTUR VE YÜKLE
+            generate_and_push_daily_coupons(analyzed_matches, FIREBASE_DATABASE_URL, FIREBASE_SECRET)
+
     except Exception as e:
         print(f"[HATA] Bülten döngüsü: {e}")
 
