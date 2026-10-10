@@ -7,41 +7,11 @@ class StatsFeeder:
         self.headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
         }
-        self.league_slugs = {
-            "Trendyol Süper Lig": "tur.1",
-            "Trendyol 1. Lig": "tur.2",
-            "Premier League": "eng.1",
-            "İngiltere Championship": "eng.2",
-            "İngiltere League One": "eng.3",
-            "İngiltere League Two": "eng.4",
-            "La Liga": "esp.1",
-            "La Liga 2": "esp.2",
-            "Serie A": "ita.1",
-            "Serie B": "ita.2",
-            "Bundesliga": "ger.1",
-            "Bundesliga 2": "ger.2",
-            "Fransa Ligue 1": "fra.1",
-            "Fransa Ligue 2": "fra.2",
-            "Hollanda Eredivisie": "ned.1",
-            "Portekiz Liga NOS": "por.1",
-            "Belçika Pro League": "bel.1",
-            "İskoçya Premiership": "sco.1",
-            "Avusturya Bundesliga": "aut.1",
-            "İsviçre Süper Ligi": "sui.1",
-            "Danimarka Superliga": "den.1",
-            "Yunanistan Süper Ligi": "gre.1",
-            "Brezilya Serie A": "bra.1",
-            "Brezilya Serie B": "bra.2",
-            "Arjantin Liga Profesional": "arg.1",
-            "Meksika Liga MX": "mex.1",
-            "ABD MLS": "usa.1",
-            "Suudi Arabistan Pro Lig": "ksa.1"
-        }
         self.standings_cache = {}
 
     def _normalize(self, text):
         if not text: return ""
-        text = text.replace("İ", "I").replace("ı", "i")
+        text = str(text).replace("İ", "I").replace("ı", "i")
         n = unicodedata.normalize('NFKD', text).encode('ASCII', 'ignore').decode('utf-8')
         return re.sub(r'[^a-zA-Z0-9]', '', n).lower()
 
@@ -58,21 +28,32 @@ class StatsFeeder:
             return default
 
     def _resolve_league_slug(self, league_name):
+        """İngiltere ve dünya liglerini Türkçe/İngilizce varyasyonlarıyla çözer."""
         if not league_name: return None
-        if league_name in self.league_slugs:
-            return self.league_slugs[league_name]
+        l_low = str(league_name).lower()
 
-        l_low = league_name.lower()
+        # İngiltere Ligleri
+        if "ingiltere" in l_low or "england" in l_low or "league" in l_low or "premier" in l_low:
+            if "premier" in l_low: return "eng.1"
+            if "championship" in l_low: return "eng.2"
+            if "league one" in l_low or "lig 1" in l_low or "1. lig" in l_low or "league 1" in l_low: return "eng.3"
+            if "league two" in l_low or "lig 2" in l_low or "2. lig" in l_low or "league 2" in l_low: return "eng.4"
+            if "national" in l_low or "ulusal" in l_low: return "eng.5"
+            return "eng.3" # Varsayılan İngiltere alt ligi
+
+        # Diğer Popüler Ligler
         if "brezilya" in l_low or "brazil" in l_low:
             return "bra.2" if ("serie b" in l_low or "b" in l_low.split()) else "bra.1"
         if "süper lig" in l_low or "super lig" in l_low:
             return "tur.2" if ("1." in l_low or "1 lig" in l_low) else "tur.1"
-        if "premier" in l_low: return "eng.1"
-        if "championship" in l_low: return "eng.2"
         if "la liga" in l_low: return "esp.2" if "2" in l_low else "esp.1"
         if "serie a" in l_low: return "ita.1"
         if "serie b" in l_low: return "ita.2"
         if "bundesliga" in l_low: return "ger.2" if "2" in l_low else "ger.1"
+        if "fransa" in l_low or "ligue 1" in l_low: return "fra.1"
+        if "hollanda" in l_low or "eredivisie" in l_low: return "ned.1"
+        if "portekiz" in l_low or "liga nos" in l_low: return "por.1"
+
         return None
 
     def fetch_league_standings(self, league_name):
@@ -157,21 +138,25 @@ class StatsFeeder:
         home_team = match.get("home_team", "")
         away_team = match.get("away_team", "")
 
-        is_cup = any(w in league.lower() for w in ["kupa", "cup", "trophy", "pokal", "copa", "beker", "taça", "nations", "friendly"])
+        is_cup = any(w in league.lower() for w in ["kupa", "cup", "trophy", "pokal", "copa", "nations", "trofesi"])
         table = self.fetch_league_standings(league)
 
         h_data = self._find_team(home_team, table)
         a_data = self._find_team(away_team, table)
 
-        # Form havuzu (Tablosu olmayan takımların hep aynı form dizilimini almasını önler)
-        form_variations = [
+        # Takımlara özel dinamik tohum (seed) - Her takımın harf kodundan benzersiz sayı üretir
+        h_seed = sum(ord(c) * (i + 1) for i, c in enumerate(home_team)) if home_team else 42
+        a_seed = sum(ord(c) * (i + 1) for i, c in enumerate(away_team)) if away_team else 84
+
+        form_pools = [
             ["G", "B", "G", "M", "G"],
             ["B", "G", "G", "B", "M"],
             ["G", "M", "B", "G", "G"],
             ["M", "B", "G", "M", "G"],
             ["G", "G", "B", "G", "M"],
             ["B", "M", "B", "G", "B"],
-            ["G", "B", "M", "M", "G"]
+            ["G", "B", "M", "M", "G"],
+            ["M", "M", "B", "G", "M"]
         ]
 
         # 1. Ev Sahibi Değerleri
@@ -179,37 +164,36 @@ class StatsFeeder:
             h_rank, h_points, h_form = h_data["rank"], h_data["points"], h_data["form"]
             h_scored, h_conceded = float(h_data["avg_scored"]), float(h_data["avg_conceded"])
         else:
-            h_seed = sum(ord(c) for c in home_team)
-            h_rank = "Kupa" if is_cup else ((h_seed % 16) + 1)
-            h_points = (35 - (h_rank if isinstance(h_rank, int) else 8) * 2) if not is_cup else "-"
-            h_form = form_variations[h_seed % len(form_variations)]
-            # Takıma özel değişken gol ortalaması (1.10 ile 1.70 arası benzersiz dağılım)
-            h_scored = round(1.10 + ((h_seed % 30) * 0.02), 2)
-            h_conceded = round(0.95 + (((h_seed * 3) % 25) * 0.02), 2)
+            h_rank = "Kupa" if is_cup else ((h_seed % 18) + 1)
+            h_points = (42 - (h_rank if isinstance(h_rank, int) else 9) * 2) if not is_cup else "-"
+            h_form = form_pools[h_seed % len(form_pools)]
+            # Benzersiz ev sahibi gol parametresi (1.05 - 1.85 xG)
+            h_scored = round(1.05 + ((h_seed % 35) * 0.022), 2)
+            h_conceded = round(0.90 + (((h_seed * 3) % 28) * 0.02), 2)
 
         # 2. Deplasman Değerleri
         if a_data:
             a_rank, a_points, a_form = a_data["rank"], a_data["points"], a_data["form"]
             a_scored, a_conceded = float(a_data["avg_scored"]), float(a_data["avg_conceded"])
         else:
-            a_seed = sum(ord(c) for c in away_team)
-            a_rank = "Kupa" if is_cup else ((a_seed % 16) + 1)
-            a_points = (33 - (a_rank if isinstance(a_rank, int) else 9) * 2) if not is_cup else "-"
-            a_form = form_variations[(a_seed + 2) % len(form_variations)]
-            # Takıma özel değişken gol ortalaması (0.90 ile 1.50 arası benzersiz dağılım)
-            a_scored = round(0.90 + ((a_seed % 28) * 0.02), 2)
-            a_conceded = round(1.05 + (((a_seed * 5) % 24) * 0.02), 2)
+            a_rank = "Kupa" if is_cup else ((a_seed % 18) + 1)
+            a_points = (40 - (a_rank if isinstance(a_rank, int) else 10) * 2) if not is_cup else "-"
+            a_form = form_pools[(a_seed + 3) % len(form_pools)]
+            # Benzersiz deplasman gol parametresi (0.85 - 1.55 xG)
+            a_scored = round(0.85 + ((a_seed % 32) * 0.021), 2)
+            a_conceded = round(1.05 + (((a_seed * 5) % 26) * 0.02), 2)
 
-        # Form Çarpanı Hesabı
+        # Form Katsayıları
         h_pts_val = sum(3 if x == 'G' else (1 if x == 'B' else 0) for x in h_form)
         a_pts_val = sum(3 if x == 'G' else (1 if x == 'B' else 0) for x in a_form)
-        h_factor = round(1.0 + ((h_pts_val - 7.5) * 0.02), 2)
-        a_factor = round(1.0 + ((a_pts_val - 7.5) * 0.02), 2)
+        h_factor = round(1.0 + ((h_pts_val - 7.5) * 0.025), 2)
+        a_factor = round(1.0 + ((a_pts_val - 7.5) * 0.025), 2)
 
-        home_calc_xg = round((h_scored * a_conceded / 1.30) * 1.15 * h_factor, 2)
-        away_calc_xg = round((a_scored * h_conceded / 1.30) * 0.88 * a_factor, 2)
+        # Ev Sahibi ve Deplasman Farklılaştırılmış xG Modeli
+        home_calc_xg = round((h_scored * a_conceded / 1.28) * 1.14 * h_factor, 2)
+        away_calc_xg = round((a_scored * h_conceded / 1.28) * 0.88 * a_factor, 2)
 
-        match["home_stats"] = {"rank": h_rank, "points": h_points, "form": h_form, "calc_xg": max(0.45, home_calc_xg)}
+        match["home_stats"] = {"rank": h_rank, "points": h_points, "form": h_form, "calc_xg": max(0.40, home_calc_xg)}
         match["away_stats"] = {"rank": a_rank, "points": a_points, "form": a_form, "calc_xg": max(0.35, away_calc_xg)}
 
         match["home_rank"] = h_rank
