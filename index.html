@@ -207,17 +207,33 @@
         }
 
         /* TERMİNAL */
-        .terminal-stadium-wrapper {
+       .terminal-stadium-wrapper {
     position: relative;
     background-image: 
-        radial-gradient(ellipse at 50% -5%, rgba(0, 255, 136, 0.18) 0%, transparent 55%),
-        radial-gradient(circle at 85% 15%, rgba(0, 210, 255, 0.15) 0%, transparent 45%),
-        linear-gradient(180deg, rgba(8, 14, 26, 0.72) 0%, rgba(6, 10, 18, 0.88) 100%),
+        /* Üstten vuran parlak yeşil ve mavi projektörler */
+        radial-gradient(circle at 50% 0%, rgba(0, 255, 136, 0.28) 0%, transparent 60%),
+        radial-gradient(circle at 85% 15%, rgba(0, 210, 255, 0.22) 0%, transparent 50%),
+        radial-gradient(circle at 15% 20%, rgba(0, 255, 136, 0.18) 0%, transparent 45%),
+        /* Perdeyi incelttik: Stadyum ve çimler artık net görünecek */
+        linear-gradient(180deg, rgba(8, 18, 32, 0.45) 0%, rgba(6, 12, 22, 0.78) 100%),
         url('https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=2200&q=85');
     background-size: cover;
     background-position: center top;
     background-attachment: fixed;
     min-height: 100vh;
+}
+
+/* KARTLARIN ARKA PLANINI ŞEFFAFLAŞTIRIP ZEMİNLE BÜTÜNLEŞTİRME */
+.terminal-controls,
+.kpi-card,
+.match-row,
+#coupons-container > div {
+    background: rgba(11, 22, 38, 0.58) !important;
+    backdrop-filter: blur(14px) !important;
+    -webkit-backdrop-filter: blur(14px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-top: 1px solid rgba(0, 255, 136, 0.35) !important;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4) !important;
 }
 
 /* KARTLARI AYDINLATAN BUZLU CAM EFEKTİ */
