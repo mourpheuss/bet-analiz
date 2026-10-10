@@ -466,7 +466,7 @@
         .stat-box span { font-size: 0.75rem; color: var(--text-sub); display: block; margin-bottom: 0.3rem; }
         .stat-box strong { font-size: 1.25rem; font-family: var(--font-code); color: var(--accent-green); }
 
-        /* KOPYALANABİLİR ÖDEME KARTI BİLEŞENİ */
+        /* KOPYALANABİLİR ÖDEME KARTI */
         .mas-copy-box {
             background: #141d27;
             border: 1px solid #233446;
@@ -622,6 +622,18 @@
                     <div class="kpi-label">Canlı & Skor Döngüsü</div>
                 </div>
             </div>
+        </div>
+
+        <!-- GÜNÜN ALGORİTMİK KUPONLARI VİTRİNİ (YENİ) -->
+        <div id="coupons-section" style="margin-bottom: 2rem; display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--accent-green); font-size: 1.15rem;"></i>
+                    <h3 style="font-size: 1.15rem; font-weight: 900; margin: 0; color: #fff;">Günün Algoritmik Kuponları</h3>
+                </div>
+                <span id="coupon-update-time" style="font-size: 0.75rem; color: var(--text-sub); font-family: var(--font-code);">Model Güncellemesi: --</span>
+            </div>
+            <div id="coupons-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.2rem;"></div>
         </div>
 
         <div class="terminal-controls">
@@ -789,7 +801,7 @@
     </div>
 </div>
 
-<!-- 5. BANKA / IBAN ÖDEME BİLGİ MODALI (YENİ) -->
+<!-- 5. BANKA / IBAN ÖDEME BİLGİ MODALI -->
 <div id="modal-payment" class="modal" onclick="closeOnBackdrop(event, 'modal-payment')">
     <div class="modal-box" style="max-width: 480px;" onclick="event.stopPropagation()">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; border-bottom: 1px solid var(--border-line); padding-bottom: 0.8rem;">
@@ -801,14 +813,14 @@
         </div>
 
         <p style="font-size: 0.84rem; color: var(--text-sub); margin-bottom: 1.2rem; line-height: 1.5;">
-            VIP üyelik aktivasyonunuzun anında tamamlanabilmesi için tutarı aşağıdaki şirket hesabımıza gönderip açıklama kısmına <strong>kullanıcı adınızı</strong> yazınız.
+            VIP üyelik aktivasyonunuzun anında tamamlanabilmesi için tutarı aşağıdaki şirket hesabımıza gönderiniz.
         </p>
 
         <!-- ALICI ADI / ŞİRKET ÜNVANI -->
         <div class="mas-copy-box">
             <div class="mas-copy-info">
                 <span class="label">Alıcı / Şirket Ünvanı</span>
-                <span class="value" id="valCompanyName">Medya Grup Dijital Yazılım Bilişim Hizmetleri San Tic Ltd Şti</span>
+                <span class="value" id="valCompanyName">MAS TEKNOLOJİ VE YAZILIM A.Ş.</span>
             </div>
             <button type="button" class="btn-copy" onclick="copyMasData('valCompanyName', this)">
                 <i class="fa-regular fa-copy"></i>
@@ -820,7 +832,7 @@
         <div class="mas-copy-box">
             <div class="mas-copy-info">
                 <span class="label">IBAN Numarası</span>
-                <span class="value iban-code" id="valIban">TR25 0021 2000 0005 1028 9000 01</span>
+                <span class="value iban-code" id="valIban">TR00 0000 0000 0000 0000 0000 00</span>
             </div>
             <button type="button" class="btn-copy" onclick="copyMasData('valIban', this)">
                 <i class="fa-regular fa-copy"></i>
@@ -828,15 +840,16 @@
             </button>
         </div>
 
+        <!-- FOTOĞRAFTAKİ ÖNEMLİ UYARI KUTUSU (GÜNCELLENDİ) -->
         <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.25); color: #fbbf24; padding: 10px; border-radius: 10px; font-size: 0.78rem; margin: 1.2rem 0; line-height: 1.4;">
-    <i class="fa-solid fa-circle-exclamation"></i> <strong>Önemli:</strong> Transfer açıklamasına lütfen <strong>"Web Yazılım Bedeli"</strong> ile birlikte <strong>kullanıcı adınızı</strong> giriniz. <span style="color: #94a3b8; display: block; margin-top: 4px;">(Örnek: Web Yazılım Bedeli - kullaniciadi)</span>
-</div>
+            <i class="fa-solid fa-circle-exclamation"></i> <strong>Önemli:</strong> Transfer açıklamasına lütfen <strong>"Web Yazılım Bedeli"</strong> ile birlikte <strong>kullanıcı adınızı</strong> giriniz. <span style="color: #94a3b8; display: block; margin-top: 4px;">(Örnek: Web Yazılım Bedeli - kullaniciadi)</span>
+        </div>
 
         <div style="display: flex; flex-direction: column; gap: 0.6rem;">
             <button onclick="closeModal('modal-payment'); openModal('modal-register');" class="btn-glow" style="width: 100%; justify-content:center;">
                 <i class="fa-solid fa-user-plus"></i> Ödemeyi Yaptım, Hemen Kayıt Ol
             </button>
-            <a href="https://wa.me/905304141306?text=Merhaba,%20MAS%20PRO%20ücretini%20gönderdim.%20Kullanıcı%20adım:%20" target="_blank" class="btn-outline" style="width: 100%; text-align: center; text-decoration: none; font-size: 0.85rem; color: #25d366; border-color: rgba(37, 211, 102, 0.4); justify-content: center; display: inline-flex; align-items: center; gap: 6px;">
+            <a href="https://wa.me/905XXXXXXXXX?text=Merhaba,%20MAS%20PRO%20ücretini%20gönderdim.%20Kullanıcı%20adım:%20" target="_blank" class="btn-outline" style="width: 100%; text-align: center; text-decoration: none; font-size: 0.85rem; color: #25d366; border-color: rgba(37, 211, 102, 0.4); justify-content: center; display: inline-flex; align-items: center; gap: 6px;">
                 <i class="fa-brands fa-whatsapp"></i> WhatsApp ile Dekont İlet
             </a>
         </div>
@@ -992,11 +1005,93 @@
         if (view === 'terminal') {
             document.getElementById('view-terminal').classList.remove('hidden');
             loadMatches();
+            loadDailyCoupons();
         }
         if (view === 'admin') {
             document.getElementById('view-admin').classList.remove('hidden');
             loadAdminUsers();
         }
+    }
+
+    function loadDailyCoupons() {
+        const section = document.getElementById("coupons-section");
+        if (!section) return;
+
+        db.ref("daily_coupons").on("value", snap => {
+            const data = snap.val();
+            if (!data) {
+                section.style.display = "none";
+                return;
+            }
+
+            section.style.display = "block";
+            const container = document.getElementById("coupons-container");
+            const timeEl = document.getElementById("coupon-update-time");
+            if (timeEl && data.updated_at) {
+                timeEl.innerText = `Model Güncellemesi: ${data.updated_at}`;
+            }
+            container.innerHTML = "";
+
+            const couponDefs = [
+                { key: 'banko', data: data.banko, icon: 'fa-shield-halved', color: 'var(--accent-green)', borderGlow: 'rgba(0, 255, 136, 0.3)' },
+                { key: 'ideal', data: data.ideal, icon: 'fa-bolt', color: 'var(--accent-cyan)', borderGlow: 'rgba(0, 210, 255, 0.3)' },
+                { key: 'goals', data: data.goals, icon: 'fa-fire-flame-curved', color: 'var(--accent-amber)', borderGlow: 'rgba(245, 158, 11, 0.3)' }
+            ];
+
+            couponDefs.forEach(c => {
+                const item = c.data;
+                if (!item || !item.matches || item.matches.length === 0) return;
+
+                let matchesHtml = "";
+                let totalConf = 0;
+
+                item.matches.forEach(m => {
+                    totalConf += (m.confidence || 75);
+                    const timeOnly = (m.date || '').split(' ')[1] || 'TSİ';
+                    matchesHtml += `
+                        <div style="background: rgba(5, 8, 17, 0.65); border: 1px solid var(--border-line); border-radius: 12px; padding: 10px 12px; margin-bottom: 8px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.73rem; color:var(--text-sub); margin-bottom:5px;">
+                                <span style="font-weight:700;"><i class="fa-regular fa-futbol" style="font-size:0.68rem; margin-right:3px;"></i> ${m.league || 'Lig'}</span>
+                                <span style="color:var(--accent-cyan); font-family:var(--font-code); font-weight:700;">${timeOnly}</span>
+                            </div>
+                            <div style="font-weight:800; font-size:0.88rem; color:#fff; margin-bottom:6px;">${m.match}</div>
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span style="background:rgba(0,255,136,0.12); color:var(--accent-green); border:1px solid rgba(0,255,136,0.3); padding:3px 8px; border-radius:6px; font-weight:800; font-size:0.76rem; font-family:var(--font-code);">
+                                    ${m.pick}
+                                </span>
+                                <span style="font-size:0.74rem; color:var(--text-sub); font-family:var(--font-code); font-weight:700;">
+                                    Güven: <strong style="color:#fff;">%${m.confidence || 75}</strong>
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                const avgConf = Math.round(totalConf / item.matches.length);
+
+                container.innerHTML += `
+                    <div style="background: var(--bg-surface); backdrop-filter: blur(14px); border: 1px solid ${c.borderGlow}; border-radius: 18px; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem;">
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                    <i class="fa-solid ${c.icon}" style="color:${c.color}; font-size:1.1rem;"></i>
+                                    <h4 style="margin:0; font-size:1rem; font-weight:900; color:#fff;">${item.title}</h4>
+                                </div>
+                                <span style="background:rgba(255,255,255,0.06); border:1px solid var(--border-line); color:${c.color}; font-size:0.7rem; font-weight:800; padding:2px 8px; border-radius:6px; font-family:var(--font-code);">
+                                    ${item.matches.length} MAÇ
+                                </span>
+                            </div>
+                            <p style="font-size:0.76rem; color:var(--text-sub); margin:0 0 1rem 0; line-height:1.4;">${item.desc}</p>
+                            <div>${matchesHtml}</div>
+                        </div>
+                        <div style="margin-top:0.8rem; padding-top:0.75rem; border-top:1px solid rgba(255,255,255,0.06); display:flex; justify-content:space-between; align-items:center; font-size:0.76rem; color:var(--text-sub);">
+                            <span>Ortalama Model Güveni:</span>
+                            <span style="font-family:var(--font-code); font-weight:800; color:${c.color};">%${avgConf}</span>
+                        </div>
+                    </div>
+                `;
+            });
+        });
     }
 
     function loadLiveSuccesses() {
@@ -1390,7 +1485,6 @@
         }
 
         filtered.forEach(m => {
-            // LİG SIRALAMASINI DİREKT GÖSTERME (FİKSTÜR YAZISINI ENGELLEYEN BLOK)
             const td = m.team_details || {};
             const hRank = td.home_rank || m.home_rank || m.home_pos;
             const aRank = td.away_rank || m.away_rank || m.away_pos;
