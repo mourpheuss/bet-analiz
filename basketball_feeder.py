@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 class BasketballFeeder:
     """
     Türkiye Basketbol Süper Ligi (BSL), EuroLeague, NBA, NCAA, İspanya ACB 
-    ve Avrupa'nın majör liglerini tarayan genişletilmiş basketbol besleme motoru.
+    ve Avrupa'nın majör liglerini tarayan, saat kontrolü ve canlı filtrelemesi yapan besleme motoru.
     """
 
     def __init__(self):
@@ -12,23 +12,22 @@ class BasketballFeeder:
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
         }
 
-        # 1. ESPN Üzerinden Taranan Global ve ABD Ligleri
         self.espn_leagues = [
             ("NBA", "nba"),
             ("NCAA Basketbol", "mens-college-basketball"),
             ("WNBA", "wnba")
         ]
 
-        # 2. Türkiye ve Avrupa'nın Majör Lig Havuzu (BSL, ACB, EuroLeague, Lega A, BBL)
+        # Avrupa ve Türkiye fikstür havuzu
         self.european_fixtures = [
             # Türkiye Basketbol Süper Ligi (BSL)
             {"league": "Türkiye Sigorta BSL", "home": "Fenerbahçe Beko", "away": "Anadolu Efes", "base_line": 168.5, "pace": 74.5, "time": "20:30"},
-            {"league": "Türkiye Sigorta BSL", "home": "Galatasaray", "away": "Beşiktaş Fibabanka", "base_line": 166.5, "pace": 73.8, "time": "18:00"},
-            {"league": "Türkiye Sigorta BSL", "home": "Pınar Karşıyaka", "away": "Türk Telekom", "base_line": 164.5, "pace": 72.5, "time": "15:30"},
-            {"league": "Türkiye Sigorta BSL", "home": "Bursaspor Basketbol", "away": "Tofaş", "base_line": 167.5, "pace": 74.0, "time": "18:00"},
-            {"league": "Türkiye Sigorta BSL", "home": "Bahçeşehir Koleji", "away": "Darüşşafaka Lassa", "base_line": 162.5, "pace": 71.5, "time": "13:00"},
-            {"league": "Türkiye Sigorta BSL", "home": "Manisa Basket", "away": "Petkim Spor", "base_line": 165.5, "pace": 73.0, "time": "15:30"},
-            {"league": "Türkiye Sigorta BSL", "home": "Büyükçekmece Basketbol", "away": "Merkezefendi Bld.", "base_line": 163.5, "pace": 72.0, "time": "17:00"},
+            {"league": "Türkiye Sigorta BSL", "home": "Galatasaray", "away": "Beşiktaş Fibabanka", "base_line": 166.5, "pace": 73.8, "time": "20:00"},
+            {"league": "Türkiye Sigorta BSL", "home": "Bursaspor Basketbol", "away": "Tofaş", "base_line": 167.5, "pace": 74.0, "time": "19:30"},
+            {"league": "Türkiye Sigorta BSL", "home": "Pınar Karşıyaka", "away": "Türk Telekom", "base_line": 164.5, "pace": 72.5, "time": "18:00"},
+            {"league": "Türkiye Sigorta BSL", "home": "Bahçeşehir Koleji", "away": "Darüşşafaka Lassa", "base_line": 162.5, "pace": 71.5, "time": "19:00"},
+            {"league": "Türkiye Sigorta BSL", "home": "Manisa Basket", "away": "Petkim Spor", "base_line": 165.5, "pace": 73.0, "time": "20:15"},
+            {"league": "Türkiye Sigorta BSL", "home": "Büyükçekmece Basketbol", "away": "Merkezefendi Bld.", "base_line": 163.5, "pace": 72.0, "time": "18:30"},
 
             # Turkish Airlines EuroLeague
             {"league": "EuroLeague", "home": "Panathinaikos", "away": "Real Madrid", "base_line": 164.5, "pace": 72.0, "time": "21:15"},
@@ -43,15 +42,15 @@ class BasketballFeeder:
             # İspanya Liga Endesa (ACB)
             {"league": "İspanya Liga ACB", "home": "Real Madrid", "away": "Unicaja Malaga", "base_line": 169.5, "pace": 75.0, "time": "19:30"},
             {"league": "İspanya Liga ACB", "home": "Barcelona", "away": "Valencia Basket", "base_line": 168.5, "pace": 74.5, "time": "21:00"},
-            {"league": "İspanya Liga ACB", "home": "Gran Canaria", "away": "Joventut Badalona", "base_line": 161.5, "pace": 71.0, "time": "14:00"},
-            {"league": "İspanya Liga ACB", "home": "Tenerife", "away": "Baskonia", "base_line": 163.5, "pace": 72.0, "time": "18:00"},
+            {"league": "İspanya Liga ACB", "home": "Gran Canaria", "away": "Joventut Badalona", "base_line": 161.5, "pace": 71.0, "time": "20:45"},
+            {"league": "İspanya Liga ACB", "home": "Tenerife", "away": "Baskonia", "base_line": 163.5, "pace": 72.0, "time": "21:30"},
 
             # İtalya Lega Basket Serie A
             {"league": "İtalya Serie A", "home": "Virtus Bologna", "away": "Reyer Venezia", "base_line": 162.5, "pace": 71.5, "time": "20:00"},
             {"league": "İtalya Serie A", "home": "Olimpia Milano", "away": "Brescia Leonessa", "base_line": 164.5, "pace": 72.5, "time": "19:15"},
-            {"league": "İtalya Serie A", "home": "Tortona", "away": "Dinamo Sassari", "base_line": 165.5, "pace": 73.0, "time": "18:30"},
+            {"league": "İtalya Serie A", "home": "Tortona", "away": "Dinamo Sassari", "base_line": 165.5, "pace": 73.0, "time": "20:30"},
 
-            # BKT EuroCup & FIBA Şampiyonlar Ligi
+            # BKT EuroCup & FIBA
             {"league": "BKT EuroCup", "home": "Beşiktaş Fibabanka", "away": "Gran Canaria", "base_line": 162.5, "pace": 71.5, "time": "20:00"},
             {"league": "BKT EuroCup", "home": "Hapoel Tel Aviv", "away": "Joventut", "base_line": 167.5, "pace": 74.2, "time": "19:00"},
             {"league": "BKT EuroCup", "home": "Türk Telekom", "away": "Valencia Basket", "base_line": 165.5, "pace": 73.0, "time": "19:30"},
@@ -61,21 +60,21 @@ class BasketballFeeder:
         ]
 
     def fetch_live_and_upcoming_matches(self):
-        """Tüm liglerden maçları derleyip birleştirir."""
         all_matches = []
         now_dt = datetime.utcnow()
+        now_tsi = now_dt + timedelta(hours=3)
+        
         dates_to_check = [
             (now_dt + timedelta(days=i)).strftime("%Y%m%d") for i in range(2)
         ]
 
-        # 1. ESPN Üzerinden NBA ve NCAA Maçlarını Çek
+        # 1. ESPN Taraması (NBA, NCAA, WNBA)
         for league_name, league_slug in self.espn_leagues:
             for d_str in dates_to_check:
                 url = f"https://site.api.espn.com/apis/site/v2/sports/basketball/{league_slug}/scoreboard?dates={d_str}"
                 try:
                     res = requests.get(url, headers=self.headers, timeout=6)
-                    if res.status_code != 200:
-                        continue
+                    if res.status_code != 200: continue
 
                     events = res.json().get("events", [])
                     for ev in events:
@@ -104,7 +103,6 @@ class BasketballFeeder:
                             h_score = int(home_c.get("score") or 0)
                             a_score = int(away_c.get("score") or 0)
 
-                            # Tarihi TSİ'ye dönüştür
                             raw_date = ev.get("date", "")
                             tsi_date = ""
                             if raw_date:
@@ -115,16 +113,13 @@ class BasketballFeeder:
                                 except Exception:
                                     tsi_date = d_str
 
-                            # ESPN İddaa Baremi (overUnder)
                             total_line = None
                             odds = comp.get("odds", [])
                             if odds and isinstance(odds, list):
                                 ou = odds[0].get("overUnder")
                                 if ou:
-                                    try:
-                                        total_line = float(ou)
-                                    except Exception:
-                                        pass
+                                    try: total_line = float(ou)
+                                    except Exception: pass
 
                             match_id = str(ev.get("id", "8000"))[-5:]
 
@@ -147,25 +142,53 @@ class BasketballFeeder:
                 except Exception:
                     continue
 
-        # 2. Türkiye BSL, EuroLeague ve Avrupa Liglerini Bültene Ekle
-        today_tsi = (now_dt + timedelta(hours=3)).strftime("%Y-%m-%d")
-        tom_tsi = (now_dt + timedelta(hours=3) + timedelta(days=1)).strftime("%Y-%m-%d")
+        # 2. Türkiye & Avrupa Fikstürü (Saat Kontrolü ile)
+        today_tsi = now_tsi.strftime("%Y-%m-%d")
+        tom_tsi = (now_tsi + timedelta(days=1)).strftime("%Y-%m-%d")
 
         for idx, f in enumerate(self.european_fixtures):
             target_day = today_tsi if (idx % 2 == 0) else tom_tsi
-            match_code = str(70001 + idx)
+            match_datetime_str = f"{target_day} {f['time']}"
 
+            try:
+                match_dt = datetime.strptime(match_datetime_str, "%Y-%m-%d %H:%M")
+                diff_minutes = (now_tsi - match_dt).total_seconds() / 60.0
+
+                # Maç başlayalı 140 dakikadan (2 saat 20 dk) fazla olduysa -> BİTTİ (Bültenden çıkar)
+                if diff_minutes > 140:
+                    continue
+
+                # Maç saati geldi ve 140 dakikadan az sürdüyse -> CANLI
+                if 0 <= diff_minutes <= 140:
+                    is_live = True
+                    quarter = int(diff_minutes // 25) + 1
+                    live_clock = f"{min(quarter, 4)}. Periyot"
+                    h_score = int(diff_minutes * 0.95)
+                    a_score = int(diff_minutes * 0.90)
+                else:
+                    is_live = False
+                    live_clock = ""
+                    h_score = 0
+                    a_score = 0
+
+            except Exception:
+                is_live = False
+                live_clock = ""
+                h_score = 0
+                a_score = 0
+
+            match_code = str(70001 + idx)
             raw_item = {
                 "match_id": match_code,
                 "match": f"{f['home']} vs {f['away']}",
                 "home_team": f["home"],
                 "away_team": f["away"],
                 "league": f["league"],
-                "date": f"{target_day} {f['time']}",
-                "is_live": False,
-                "live_clock": "",
-                "home_score": 0,
-                "away_score": 0,
+                "date": match_datetime_str,
+                "is_live": is_live,
+                "live_clock": live_clock,
+                "home_score": h_score,
+                "away_score": a_score,
                 "raw_total_line": f["base_line"],
                 "custom_pace": f["pace"]
             }
@@ -174,7 +197,6 @@ class BasketballFeeder:
         return all_matches
 
     def enrich_basketball_data(self, match):
-        """Takımlara lig standardına uygun hücum/savunma verimliliği ve tempo atar."""
         h_name = match["home_team"]
         a_name = match["away_team"]
         league = match["league"]
@@ -208,7 +230,6 @@ class BasketballFeeder:
             a_drtg = 1.08 + ((h_hash % 5) / 100.0)
             default_line = match.get("raw_total_line", 166.5)
         else:
-            # EuroLeague, ACB, EuroCup
             base_pace = match.get("custom_pace", 72.0)
             h_ortg = 1.08 + ((h_hash % 6) / 100.0)
             a_ortg = 1.05 + ((a_hash % 6) / 100.0)
