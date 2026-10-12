@@ -1518,6 +1518,17 @@
             }
             return true;
         });
+        // MAÇLARI KRONOLOJİK VE CANLI DURUMUNA GÖRE SIRALA
+        filtered.sort((a, b) => {
+            // 1. Canlı maçlar her zaman en üstte yer alır
+            if (a.is_live && !b.is_live) return -1;
+            if (!a.is_live && b.is_live) return 1;
+
+            // 2. Ardından saat sırasına göre artan sıralanır (18:00 -> 19:30 -> 20:30 -> 23:00)
+            const dateA = a.date || '';
+            const dateB = b.date || '';
+            return dateA.localeCompare(dateB);
+        });
 
         if (filtered.length === 0) {
             const emptyNotice = selectedDateFilter === todayTsi 
