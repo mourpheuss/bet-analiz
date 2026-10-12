@@ -8,6 +8,10 @@ on:
     branches:
       - main
 
+concurrency:
+  group: mas-engine-singleton
+  cancel-in-progress: true
+
 jobs:
   run-mas-engine:
     runs-on: ubuntu-latest
