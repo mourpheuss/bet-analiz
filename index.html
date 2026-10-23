@@ -764,6 +764,65 @@
         </div>
     </div>
 
+    <!-- MODEL PERFORMANS & BACKTEST LABORATUVARI -->
+    <div style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95)); border: 1px solid var(--accent-cyan); border-radius: 18px; padding: 1.4rem; margin-bottom: 2rem; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.2rem; border-bottom: 1px solid var(--border-line); padding-bottom: 0.8rem;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <i class="fa-solid fa-flask-vial" style="color: var(--accent-cyan); font-size: 1.3rem;"></i>
+                <div>
+                    <h3 style="font-size: 1.15rem; font-weight: 900; color: #fff; margin: 0;">Model Performans & Backtest Laboratuvarı</h3>
+                    <span id="adm-backtest-time" style="font-size: 0.74rem; color: var(--text-sub); font-family: var(--font-code);">Son Test: Yükleniyor...</span>
+                </div>
+            </div>
+            <div style="display: flex; gap: 0.6rem; align-items: center;">
+                <button onclick="triggerBacktestWorkflow()" class="btn-glow" style="font-size: 0.82rem; padding: 0.6rem 1.1rem; background: var(--accent-cyan); color: #060911;">
+                    <i class="fa-solid fa-play"></i> Yeni Testi Başlat (GitHub)
+                </button>
+                <a href="https://github.com/mourpheuss/bet-analiz/actions/workflows/run_backtest.yml" target="_blank" class="btn-outline" style="font-size: 0.82rem; padding: 0.6rem 0.9rem;" title="GitHub Actions Sayfası">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- KPI Kartları -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.8rem; margin-bottom: 1.2rem; text-align: center;">
+            <div style="background: #0f172a; padding: 0.8rem; border-radius: 12px; border: 1px solid var(--border-line);">
+                <span style="font-size: 0.7rem; color: var(--text-sub); font-weight: 700; text-transform: uppercase;">Toplam Bahis</span>
+                <strong id="adm-bt-total" style="font-size: 1.25rem; font-family: var(--font-code); color: #fff;">--</strong>
+            </div>
+            <div style="background: #0f172a; padding: 0.8rem; border-radius: 12px; border: 1px solid var(--border-line);">
+                <span style="font-size: 0.7rem; color: var(--text-sub); font-weight: 700; text-transform: uppercase;">İsabet Oranı</span>
+                <strong id="adm-bt-winrate" style="font-size: 1.25rem; font-family: var(--font-code); color: var(--accent-green);">%--</strong>
+            </div>
+            <div style="background: #0f172a; padding: 0.8rem; border-radius: 12px; border: 1px solid var(--border-line);">
+                <span style="font-size: 0.7rem; color: var(--text-sub); font-weight: 700; text-transform: uppercase;">Net Kâr / Zarar</span>
+                <strong id="adm-bt-profit" style="font-size: 1.25rem; font-family: var(--font-code);">-- B</strong>
+            </div>
+            <div style="background: #0f172a; padding: 0.8rem; border-radius: 12px; border: 1px solid var(--border-line);">
+                <span style="font-size: 0.7rem; color: var(--text-sub); font-weight: 700; text-transform: uppercase;">ROI (Getiri)</span>
+                <strong id="adm-bt-roi" style="font-size: 1.25rem; font-family: var(--font-code); color: var(--accent-cyan);">%--</strong>
+            </div>
+        </div>
+
+        <!-- Piyasalar Kırılım Tablosu -->
+        <div style="background: #0f172a; border-radius: 12px; border: 1px solid var(--border-line); overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem; text-align: left;">
+                <thead>
+                    <tr style="color: var(--text-sub); border-bottom: 1px solid var(--border-line);">
+                        <th style="padding: 10px 14px;">Piyasa / Tercih</th>
+                        <th style="padding: 10px 14px;">Toplam Bahis</th>
+                        <th style="padding: 10px 14px;">Tutan (Win)</th>
+                        <th style="padding: 10px 14px;">İsabet %</th>
+                        <th style="padding: 10px 14px; text-align: right;">Net Kasa Katkısı</th>
+                    </tr>
+                </thead>
+                <tbody id="adm-bt-market-rows">
+                    <tr><td colspan="5" style="padding: 1.5rem; text-align: center; color: var(--text-sub);">Yükleniyor...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
         <div class="admin-nav-tabs">
             <button id="admin-tab-all" class="admin-tab-btn active" onclick="setAdminTab('all')">
@@ -1040,6 +1099,7 @@
         if (view === 'admin') {
             document.getElementById('view-admin').classList.remove('hidden');
             loadAdminUsers();
+            loadAdminBacktestResults();
         }
     }
 
@@ -1396,6 +1456,84 @@
         if (confirm(`'${username}' adlı kullanıcıyı silmek istediğinize emin misiniz?`)) {
             db.ref('mas_users/' + username).remove();
         }
+    }
+
+    function loadAdminBacktestResults() {
+        db.ref("backtest_results").on("value", snap => {
+            const data = snap.val();
+            if (!data) return;
+
+            const timeEl = document.getElementById("adm-backtest-time");
+            if (timeEl) timeEl.innerText = `Son Test: ${data.updated_at || '-'}`;
+
+            const totEl = document.getElementById("adm-bt-total");
+            if (totEl) totEl.innerText = data.total_bets || 0;
+
+            const wrEl = document.getElementById("adm-bt-winrate");
+            if (wrEl) wrEl.innerText = `%${data.win_rate || 0}`;
+            
+            const profitEl = document.getElementById("adm-bt-profit");
+            if (profitEl) {
+                const profitVal = data.net_profit || 0;
+                profitEl.innerText = `${profitVal > 0 ? '+' : ''}${profitVal} B`;
+                profitEl.style.color = profitVal >= 0 ? "var(--accent-green)" : "var(--accent-red)";
+            }
+
+            const roiEl = document.getElementById("adm-bt-roi");
+            if (roiEl) roiEl.innerText = `%${data.roi || 0}`;
+
+            const tbody = document.getElementById("adm-bt-market-rows");
+            if (!tbody) return;
+            tbody.innerHTML = "";
+
+            const markets = data.markets || {};
+            for (const [mName, mStat] of Object.entries(markets)) {
+                if (mStat.total === 0) continue;
+                const wr = Math.round((mStat.won / mStat.total) * 100);
+                const pColor = mStat.profit >= 0 ? "var(--accent-green)" : "var(--accent-red)";
+                const pSign = mStat.profit > 0 ? "+" : "";
+
+                tbody.innerHTML += `
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.03);">
+                        <td style="padding: 9px 14px; font-weight: 800; color: #fff;">${mName}</td>
+                        <td style="padding: 9px 14px; font-family: var(--font-code);">${mStat.total}</td>
+                        <td style="padding: 9px 14px; font-family: var(--font-code); color: var(--accent-green);">${mStat.won}</td>
+                        <td style="padding: 9px 14px; font-family: var(--font-code); font-weight: 800;">%${wr}</td>
+                        <td style="padding: 9px 14px; text-align: right; font-family: var(--font-code); font-weight: 800; color: ${pColor};">
+                            ${pSign}${mStat.profit.toFixed(1)} Birim
+                        </td>
+                    </tr>
+                `;
+            }
+        });
+    }
+
+    function triggerBacktestWorkflow() {
+        let pat = localStorage.getItem("mas_gh_token");
+        if (!pat) {
+            pat = prompt("GitHub Actions'ı panelden doğrudan tetiklemek için GitHub Personal Access Token (PAT) giriniz (Yalnızca tarayıcınızda saklanır):");
+            if (!pat) return;
+            localStorage.setItem("mas_gh_token", pat.trim());
+        }
+
+        fetch("https://api.github.com/repos/mourpheuss/bet-analiz/actions/workflows/run_backtest.yml/dispatches", {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${localStorage.getItem("mas_gh_token")}`,
+                "Accept": "application/vnd.github.v3+json",
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ ref: "main" })
+        })
+        .then(res => {
+            if (res.ok) {
+                alert("🚀 Geriye dönük test başlatıldı! Yaklaşık 40 saniye sonra veriler bu panelde otomatik yenilenecektir.");
+            } else {
+                alert("Tetikleme başarısız. GitHub Token yetkisi geçersiz olabilir veya GitHub Actions sayfasından manuel çalıştırabilirsiniz.");
+                localStorage.removeItem("mas_gh_token");
+            }
+        })
+        .catch(() => alert("Bağlantı hatası oluştu."));
     }
 
     async function handleRegister() {
@@ -1872,3 +2010,8 @@
 </script>
 </body>
 </html>
+```<ElicitationsGroup>
+<FollowUp>
+Kodu kopyalayıp GitHub'daki `index.html` dosyasına kaydettikten sonra Yönetici Masası'na girip test raporunu ekranda görebildiniz mi?
+</FollowUp>
+</ElicitationsGroup>
