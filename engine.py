@@ -1,6 +1,11 @@
 import math
 
 class SportsAnalyticsEngine:
+    """
+    Dixon-Coles matrisi, Fractional Kelly Criterion kasa yönetimi ve
+    dinamik olasılık dağılımı motoru.
+    """
+
     def __init__(self):
         self.rho = -0.11
         self.first_half_ratio = 0.44
@@ -43,6 +48,24 @@ class SportsAnalyticsEngine:
 
         return matrix
 
+    def _calculate_fractional_kelly(self, model_prob, base_prob, fraction=0.25):
+        """
+        Fractional Kelly Criterion (Kasa Yönetim Formülü):
+        Kasa riskini korumak için 1/4 (Quarter) Kelly kullanılarak
+        önerilen kasa payı (%1.0 - %4.5) hesaplanır.
+        """
+        market_odds = round(100.0 / base_prob, 2) if base_prob > 0 else 1.90
+        b = market_odds - 1.0
+        p = model_prob / 100.0
+        q = 1.0 - p
+        if b <= 0: return 2.0
+        
+        full_kelly = (b * p - q) / b
+        if full_kelly <= 0: return 1.5
+        
+        fractional = full_kelly * fraction * 100.0
+        return max(1.0, min(4.5, round(fractional, 1)))
+
     def _calculate_confidence_score(self, ms_h, ms_x, ms_a, total_xg):
         max_outcome = max(ms_h, ms_x, ms_a)
         edge_score = (max_outcome - 33.3) * 1.85
@@ -67,19 +90,21 @@ class SportsAnalyticsEngine:
                 edge = round(model_prob - base_prob, 1)
                 fair_odd = round(100.0 / model_prob, 2) if model_prob > 0 else 2.0
                 
-                # Sadece gerçekçi oran aralığında (1.45 - 2.25) ve en az %8.5 piyasa açığı varsa
+                # Sadece mantıklı oran aralığı (1.45 - 2.25) ve en az %8.5 model üstünlüğü
                 if edge >= 8.5 and 1.45 <= fair_odd <= 2.25:
+                    kelly_pct = self._calculate_fractional_kelly(model_prob, base_prob)
                     value_bets.append({
                         "market": pick_name,
                         "model_prob": model_prob,
                         "edge": edge,
-                        "fair_odd": fair_odd
+                        "fair_odd": fair_odd,
+                        "kelly_stake": kelly_pct
                     })
 
         value_bets.sort(key=lambda x: x["edge"], reverse=True)
         top_value = value_bets[0] if value_bets else None
 
-        # Günün Sniper Adayı (1.45 - 2.10 oran aralığı)
+        # GÜNÜN SNIPER ADAYI (1.45 - 2.10 ORAN ARALIĞI)
         is_sniper = False
         sniper_pick = None
 
@@ -106,7 +131,6 @@ class SportsAnalyticsEngine:
             lambda_a *= max(0.4, 1.0 - (a_reds * 0.32))
             lambda_h *= (1.0 + (a_reds * 0.22))
 
-        # 90 DAKİKA MATRİSİ
         matrix_90 = self._build_dixon_coles_matrix(lambda_h, lambda_a, max_goals=7)
 
         ms_home_prob, ms_draw_prob, ms_away_prob = 0.0, 0.0, 0.0
@@ -128,7 +152,7 @@ class SportsAnalyticsEngine:
 
                 scores_list.append((f"{h}-{a}", prob))
 
-        # İLK YARI (İY) MATRİSİ
+        # İLK YARI (İY)
         lambda_h_iy = lambda_h * self.first_half_ratio
         lambda_a_iy = lambda_a * self.first_half_ratio
         matrix_iy = self._build_dixon_coles_matrix(lambda_h_iy, lambda_a_iy, max_goals=4)
@@ -142,7 +166,7 @@ class SportsAnalyticsEngine:
                 else: iy_away_prob += prob_iy
                 if (h + a) > 0.5: iy_o05_prob += prob_iy
 
-        # İKİNCİ YARI (2Y) MATRİSİ
+        # İKİNCİ YARI (2Y)
         lambda_h_2y = lambda_h * self.second_half_ratio
         lambda_a_2y = lambda_a * self.second_half_ratio
         matrix_2y = self._build_dixon_coles_matrix(lambda_h_2y, lambda_a_2y, max_goals=4)
@@ -176,11 +200,8 @@ class SportsAnalyticsEngine:
         total_xg = lambda_h + lambda_a
         confidence = self._calculate_confidence_score(ms_h_pct, ms_x_pct, ms_a_pct, total_xg)
 
-        # ---------------------------------------------------------
-        # AKILLI TERCİH SEÇİCİ (ÇİFTE ŞANS BASKISINI BİTİREN BLOK)
-        # ---------------------------------------------------------
+        # AKILLI TERCİH HAVUZU (ÇİFTE ŞANS BASKISI KALDIRILDI)
         primary_candidates = []
-
         if o25_pct >= 56.0:
             primary_candidates.append(("2.5 ÜST", o25_pct))
         elif u25_pct >= 57.0:
@@ -198,7 +219,6 @@ class SportsAnalyticsEngine:
             primary_candidates.append(("İY 0.5 ÜST", iy_o05_pct))
 
         if primary_candidates:
-            # Ana bahis piyasaları içerisinden en güçlü olanı seç
             primary_candidates.sort(key=lambda x: x[1], reverse=True)
             strongest_pick = f"{primary_candidates[0][0]} (%{primary_candidates[0][1]})"
         elif cs_1x_pct >= 75.0:
