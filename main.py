@@ -11,13 +11,7 @@ FIREBASE_DATABASE_URL = "https://analizsepeti-f3bb5-default-rtdb.firebaseio.com"
 FIREBASE_SECRET = "mZUATfv3TJqO6Ap8d1asrXemQIYqJflfYLzprmBS"
 
 def generate_and_push_daily_sniper(analyzed_matches, fb_database_url, fb_secret):
-    """
-    Bülteni tarayarak 1.04 gibi ölü oranları eler. 
-    Yalnızca adil büro oranı 1.45 - 2.15 TL aralığında olan, 
-    model güveni ve kazanma olasılığı tavan yapmış tek maçı Sniper seçer.
-    """
     try:
-        # 1. Aşama: Tam kriterli Sniper adayları (Oranı 1.45 ile 2.15 arasında olanlar)
         candidates = []
         for m in analyzed_matches:
             if m.get("is_live", False) or m.get("volatility_warning"):
@@ -26,11 +20,9 @@ def generate_and_push_daily_sniper(analyzed_matches, fb_database_url, fb_secret)
             v_data = m.get("value_data") or {}
             fair_odd = float(v_data.get("fair_odd", 0.0))
 
-            # 1.04 - 1.35 gibi ölü oranları ve aşırı yüksek riskli oranları ele
             if m.get("is_sniper", False) and (1.45 <= fair_odd <= 2.15):
                 candidates.append(m)
 
-        # 2. Aşama Fallback: Kriterleri esneterek güven skoru 80+ olan ve oranı oynanabilir maçı seç
         if not candidates:
             for m in analyzed_matches:
                 if m.get("is_live", False) or m.get("volatility_warning"):
@@ -39,7 +31,6 @@ def generate_and_push_daily_sniper(analyzed_matches, fb_database_url, fb_secret)
                 conf = m.get("confidence_score", 0)
                 str_pick = m.get("strongest_pick", "")
                 
-                # 1.5 Üst gibi çok düşük oranlı tercihleri Sniper'a alma
                 if conf >= 80 and "1.5 ÜST" not in str_pick:
                     v_data = m.get("value_data") or {}
                     f_odd = float(v_data.get("fair_odd", 1.55))
@@ -50,7 +41,6 @@ def generate_and_push_daily_sniper(analyzed_matches, fb_database_url, fb_secret)
             print("-> Bugün için Sniper oran kriterlerine (1.45 - 2.15 ₺) uygun karşılaşma bulunamadı.")
             return
 
-        # Güven skoru ve piyasa değerine (+EV) göre sırala
         candidates.sort(
             key=lambda x: (
                 x.get("confidence_score", 0),
@@ -63,6 +53,7 @@ def generate_and_push_daily_sniper(analyzed_matches, fb_database_url, fb_secret)
         v_data = best.get("value_data") or {}
         edge_val = v_data.get("edge", 11.5)
         fair_odd = v_data.get("fair_odd", 1.55)
+        kelly_stake = v_data.get("kelly_stake", 2.5)
         pick_text = best.get("sniper_pick") or best.get("strongest_pick", "2.5 ÜST")
 
         sniper_payload = {
@@ -74,20 +65,18 @@ def generate_and_push_daily_sniper(analyzed_matches, fb_database_url, fb_secret)
             "confidence": best.get("confidence_score", 86),
             "edge": edge_val,
             "fair_odd": fair_odd,
-            "reason": "Dixon-Coles varyans kontrolü, yüksek xG kararlılığı ve +EV piyasa avantajı sağlandı."
+            "kelly_stake": kelly_stake,
+            "reason": "Dixon-Coles varyans kontrolü, saf iç/dış saha xG üstünlüğü ve Fractional Kelly kasa avantajı sağlandı."
         }
 
         endpoint = f"{fb_database_url}/daily_sniper.json?auth={fb_secret}"
         res = requests.put(endpoint, json=sniper_payload, timeout=8)
         if res.status_code == 200:
-            print(f"-> Günün Sniper Tercihi Seçildi: {sniper_payload['match']} -> {sniper_payload['pick']} (Oran Tabanı: {fair_odd} ₺)")
+            print(f"-> Günün Sniper Tercihi Seçildi: {sniper_payload['match']} -> {sniper_payload['pick']} (Oran: {fair_odd} ₺, Kasa: %{kelly_stake})")
     except Exception as e:
         print(f"[HATA] Sniper Motoru: {e}")
 
 def generate_and_push_daily_coupons(analyzed_matches, fb_database_url, fb_secret):
-    """
-    Günün kuponlarını oluştururken oynanabilir oranlı ve dengeli maçları eşleştirir.
-    """
     try:
         candidates = [
             m for m in analyzed_matches 
@@ -103,7 +92,6 @@ def generate_and_push_daily_coupons(analyzed_matches, fb_database_url, fb_secret
 
         candidates.sort(key=lambda x: x.get("confidence_score", 0), reverse=True)
 
-        # 1. KASA KUPONU (2 Maç)
         banko_matches = []
         for m in candidates[:2]:
             banko_matches.append({
@@ -114,7 +102,6 @@ def generate_and_push_daily_coupons(analyzed_matches, fb_database_url, fb_secret
                 "confidence": m.get("confidence_score", 82)
             })
 
-        # 2. İDEAL KOMBİNE (3 Maç)
         ideal_pool = candidates[2:6] if len(candidates) >= 5 else candidates[:3]
         ideal_matches = []
         for m in ideal_pool[:3]:
@@ -126,7 +113,6 @@ def generate_and_push_daily_coupons(analyzed_matches, fb_database_url, fb_secret
                 "confidence": m.get("confidence_score", 76)
             })
 
-        # 3. GOL DÜELLOSU (3 Maç)
         goal_candidates = sorted(
             candidates,
             key=lambda x: float(x.get("analysis", {}).get("total_expected_goals", 0)),
@@ -353,17 +339,14 @@ def run_scientific_pipeline():
             fb.push_analyzed_matches(analyzed_matches)
             print(f"-> {len(analyzed_matches)} futbol maç analizi Firebase'e yüklendi.")
 
-            # KUPONLAR VE GÜNÜN SNIPER'I
             generate_and_push_daily_coupons(analyzed_matches, FIREBASE_DATABASE_URL, FIREBASE_SECRET)
             generate_and_push_daily_sniper(analyzed_matches, FIREBASE_DATABASE_URL, FIREBASE_SECRET)
 
     except Exception as e:
         print(f"[HATA] Futbol Bülten Döngüsü: {e}")
 
-    # BASKETBOL
     run_basketball_pipeline()
 
-    # BAŞARI VİTRİNİ
     try:
         verify_and_update_successes(scraper, feeder, engine)
     except Exception as e:
