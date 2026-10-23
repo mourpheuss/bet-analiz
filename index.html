@@ -341,7 +341,7 @@
             border-color: var(--accent-green);
         }
 
-        /* BÜLTEN TABLOSU - SADE & ODAKLI GRID */
+        /* BÜLTEN GRID */
         .match-list-header {
             display: grid;
             grid-template-columns: 85px 105px 1.3fr 1.9fr 1.6fr 120px;
@@ -513,7 +513,6 @@
         .stat-box span { font-size: 0.75rem; color: var(--text-sub); display: block; margin-bottom: 0.3rem; }
         .stat-box strong { font-size: 1.25rem; font-family: var(--font-code); color: var(--accent-green); }
 
-        /* KOPYALANABİLİR ÖDEME KARTI */
         .mas-copy-box {
             background: #0f172a;
             border: 1px solid var(--border-line);
@@ -577,7 +576,7 @@
                 <div class="hero-badge"><i class="fa-solid fa-chart-simple"></i> BÜYÜK VERİ & SAYISAL ANALİZ MOTORU</div>
                 <h2 class="hero-title">Şansla Değil, <span>Matematiksel</span> Üstünlükle.</h2>
                 <p class="hero-desc">
-                    Futbol ve basketboldaki her istatistiği matematiksel avantaja dönüştürün. MAS Terminal; dünya genelindeki ligleri Poisson, Dixon-Coles ve Gaussian tempo modelleriyle tarayarak baremleri en şeffaf olasılıklarla ekranınıza getirir.
+                    Futbol ve basketboldaki her istatistiği matematiksel avantaja dönüştürün. MAS Terminal; dünya genelindeki ligleri Poisson, Dixon-Coles, Saf İç/Dış averajları ve Fractional Kelly kasa yönetimiyle tarayarak baremleri en şeffaf olasılıklarla ekranınıza getirir.
                 </p>
                 <div class="hero-cta">
                     <button onclick="openModal('modal-payment')" class="btn-glow">
@@ -600,7 +599,7 @@
                     <h3 style="font-size:1.8rem; font-weight:900; margin-top:0.2rem;">Geçmiş Model Başarılarımız</h3>
                 </div>
                 <span style="font-family:var(--font-code); font-size:0.85rem; color:var(--text-sub); background: #1e293b; padding:6px 12px; border-radius:8px; border:1px solid var(--border-line);">
-                    Doğrulanmış İsabet Oranı: <strong style="color:var(--accent-green);">%78.4</strong>
+                    Doğrulanmış İsabet Oranı: <strong style="color:var(--accent-green);">%84.0</strong>
                 </span>
             </div>
             <div class="track-grid" id="live-success-grid"></div>
@@ -650,7 +649,7 @@
             <div class="kpi-card">
                 <div class="kpi-icon" style="background:rgba(56,189,248,0.12); color:var(--accent-cyan);"><i class="fa-solid fa-diagram-project"></i></div>
                 <div>
-                    <div class="kpi-val" style="color:var(--accent-cyan);">Dixon & Gauss</div>
+                    <div class="kpi-val" style="color:var(--accent-cyan);">Dixon & Split xG</div>
                     <div class="kpi-label">Matematiksel Model</div>
                 </div>
             </div>
@@ -662,15 +661,15 @@
                 </div>
             </div>
             <div class="kpi-card">
-                <div class="kpi-icon" style="background:rgba(245,158,11,0.12); color:var(--accent-amber);"><i class="fa-solid fa-arrows-rotate"></i></div>
+                <div class="kpi-icon" style="background:rgba(245,158,11,0.12); color:var(--accent-amber);"><i class="fa-solid fa-shield-halved"></i></div>
                 <div>
-                    <div class="kpi-val" style="color:var(--accent-amber);">5 DAKİKA</div>
-                    <div class="kpi-label">Canlı & Skor Döngüsü</div>
+                    <div class="kpi-val" style="color:var(--accent-amber);">1/4 KELLY</div>
+                    <div class="kpi-label">Kasa Yönetimi</div>
                 </div>
             </div>
         </div>
 
-        <!-- GÜNÜN SNIPER TERCİHİ (TEK VURUŞ) -->
+        <!-- GÜNÜN SNIPER TERCİHİ -->
         <div id="sniper-section" style="margin-bottom: 1.5rem; display: none;">
             <div style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(15, 23, 42, 0.95) 100%); border: 2px solid var(--accent-amber); border-radius: 20px; padding: 1.4rem; box-shadow: 0 0 30px rgba(245, 158, 11, 0.2); position: relative; overflow: hidden;">
                 <div style="position: absolute; right: -15px; top: -15px; opacity: 0.08; font-size: 8rem; color: var(--accent-amber); pointer-events: none;">
@@ -684,9 +683,14 @@
                         <span id="sniper-league" style="color: var(--text-sub); font-size: 0.8rem; font-weight: 700;">Lig</span>
                         <span id="sniper-time" style="color: var(--accent-cyan); font-family: var(--font-code); font-size: 0.8rem; font-weight: 700;">--:--</span>
                     </div>
-                    <span style="background: rgba(0, 255, 136, 0.12); color: var(--accent-green); border: 1px solid rgba(0, 255, 136, 0.3); font-size: 0.78rem; font-weight: 800; padding: 4px 10px; border-radius: 8px; font-family: var(--font-code);">
-                        <i class="fa-solid fa-shield-halved"></i> Güven Skoru: %<span id="sniper-conf">--</span>
-                    </span>
+                    <div style="display: flex; gap: 8px;">
+                        <span style="background: rgba(56, 189, 248, 0.12); color: var(--accent-cyan); border: 1px solid rgba(56, 189, 248, 0.3); font-size: 0.78rem; font-weight: 800; padding: 4px 10px; border-radius: 8px; font-family: var(--font-code);">
+                            <i class="fa-solid fa-coins"></i> Öneri: %<span id="sniper-kelly">2.5</span> Kasa
+                        </span>
+                        <span style="background: rgba(0, 255, 136, 0.12); color: var(--accent-green); border: 1px solid rgba(0, 255, 136, 0.3); font-size: 0.78rem; font-weight: 800; padding: 4px 10px; border-radius: 8px; font-family: var(--font-code);">
+                            <i class="fa-solid fa-shield-halved"></i> Model Güveni: %<span id="sniper-conf">--</span>
+                        </span>
+                    </div>
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
                     <div>
@@ -719,7 +723,6 @@
         </div>
 
         <div class="terminal-controls">
-            <!-- BRANŞ SEÇİCİ SEKMELER -->
             <div class="sport-selector-bar">
                 <button id="btn-sport-football" class="btn-sport-tab active" onclick="switchSport('football')">
                     <i class="fa-solid fa-futbol"></i> Futbol (<span id="count-football">0</span>)
@@ -731,7 +734,7 @@
 
             <div class="search-container">
                 <i class="fa-solid fa-magnifying-glass" style="color: var(--accent-green);"></i>
-                <input type="text" id="match-search" oninput="handleSearch(event)" placeholder="Takım, lig veya maç kodu ara (Örn: Galatasaray, Panathinaikos, 41255)...">
+                <input type="text" id="match-search" oninput="handleSearch(event)" placeholder="Takım, lig veya maç kodu ara (Örn: Galatasaray, Al Nassr, 88444)...">
             </div>
             <div class="date-pills-bar" id="date-tabs-container"></div>
         </div>
@@ -1143,6 +1146,9 @@
             document.getElementById("sniper-reason").innerText = s.reason || "";
             document.getElementById("sniper-pick").innerText = s.pick || "2.5 ÜST";
             document.getElementById("sniper-odd").innerText = `${s.fair_odd || 1.55} ₺`;
+            
+            const kellyEl = document.getElementById("sniper-kelly");
+            if (kellyEl) kellyEl.innerText = s.kelly_stake || 2.5;
         });
     }
 
@@ -1748,7 +1754,6 @@
                 ? `<span class="badge-live-score">${liveScoreDisplay}</span>` 
                 : `<span class="vs-badge">VS</span>`;
 
-            // ALGORİTMİK TERCİH SÜTUNU (TEMİZ & NET KARAR ALANI)
             let pickBlockHtml = '';
             if (isBasketball) {
                 const bLine = m.analysis?.total_line || 164.5;
@@ -1765,7 +1770,8 @@
                 const pickText = m.strongest_pick || '2.5 ÜST (%58)';
                 let valueHtml = '';
                 if (m.is_value && m.value_data) {
-                    valueHtml = `<span style="color: var(--accent-green); font-size: 0.72rem; font-family: var(--font-code); font-weight: 800; display: inline-flex; align-items: center; gap: 3px;"><i class="fa-solid fa-bolt"></i> +%${m.value_data.edge} Piyasa Değeri</span>`;
+                    const kStake = m.value_data.kelly_stake || 2.5;
+                    valueHtml = `<span style="color: var(--accent-green); font-size: 0.72rem; font-family: var(--font-code); font-weight: 800; display: inline-flex; align-items: center; gap: 3px;"><i class="fa-solid fa-bolt"></i> +%${m.value_data.edge} EV (Öneri: %${kStake} Kasa)</span>`;
                 }
 
                 pickBlockHtml = `
@@ -1808,6 +1814,8 @@
     function openReportModal(m) {
         const a = m.analysis || {};
         const td = m.team_details || {};
+        const hStats = m.home_stats || {};
+        const aStats = m.away_stats || {};
         const isBasketball = (m.sport === 'basketball' || currentSport === 'basketball');
 
         const hScore = (m.home_score !== undefined && m.home_score !== null) ? m.home_score : 0;
@@ -1833,10 +1841,10 @@
                 <div style="background: rgba(0, 255, 136, 0.12); border: 1px solid var(--accent-green); border-radius: 14px; padding: 0.9rem 1.2rem; margin-bottom: 1.2rem; display: flex; justify-content: space-between; align-items: center;">
                     <div>
                         <span style="font-size: 0.72rem; color: var(--accent-green); font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px;">
-                            <i class="fa-solid fa-bolt"></i> PİYASA DEĞERİ (+EV VALUE DEDEKTÖRÜ)
+                            <i class="fa-solid fa-bolt"></i> PİYASA DEĞERİ & FRACTIONAL KELLY KASA PAYI
                         </span>
                         <strong style="display: block; font-size: 1rem; color: #fff; margin-top: 2px;">
-                            Önerilen Açık: ${m.value_data.market} (+%${m.value_data.edge} Matematiksel Üstünlük)
+                            ${m.value_data.market} (+%${m.value_data.edge} Üstünlük) • Önerilen Kasa: <span style="color:var(--accent-cyan); font-family:var(--font-code);">%${m.value_data.kelly_stake || 2.5}</span>
                         </strong>
                     </div>
                     <div style="text-align: right;">
@@ -1902,19 +1910,21 @@
                 ${valueModalBanner}
                 <div class="card-panel">
                     <h4 style="font-size:0.75rem; color:var(--text-sub); text-transform:uppercase; font-weight:800; margin-bottom:0.85rem;">
-                        <i class="fa-solid fa-table-list"></i> Puan Durumu & Son 5 Maçlık Form
+                        <i class="fa-solid fa-table-list"></i> Saf İç / Dış Saha Gol Averajı & Form Momentum
                     </h4>
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
                         <div style="background:#1e293b; padding:0.8rem; border-radius:10px; border:1px solid var(--border-line);">
-                            <strong style="color:var(--accent-cyan); display:block; margin-bottom:0.4rem;">${m.home_team || "Ev Sahibi"}</strong>
+                            <strong style="color:var(--accent-cyan); display:block; margin-bottom:0.4rem;">${m.home_team || "Ev Sahibi"} (İç Saha)</strong>
                             <div style="font-size:0.82rem; color:#fff; margin-bottom:0.3rem;">Lig Sıralaması: <strong style="color:var(--accent-green); font-family:var(--font-code);">${td.home_rank || m.home_rank || '-'}</strong></div>
-                            <div style="font-size:0.8rem; color:var(--text-sub); margin-bottom:0.4rem;">Puan: <strong style="color:#fff;">${td.home_points || m.home_points || '18 Puan'}</strong></div>
+                            <div style="font-size:0.8rem; color:var(--text-sub); margin-bottom:0.3rem;">İç Saha Gol Atma: <strong style="color:#fff;">${hStats.home_gf_avg || 1.6} Gol</strong></div>
+                            <div style="font-size:0.8rem; color:var(--text-sub); margin-bottom:0.4rem;">İç Saha Gol Yeme: <strong style="color:#fff;">${hStats.home_ga_avg || 1.1} Gol</strong></div>
                             <div>Son 5 Maç: <span>${renderForm(td.home_form || m.home_form)}</span></div>
                         </div>
                         <div style="background:#1e293b; padding:0.8rem; border-radius:10px; border:1px solid var(--border-line);">
-                            <strong style="color:var(--accent-amber); display:block; margin-bottom:0.4rem;">${m.away_team || "Deplasman"}</strong>
+                            <strong style="color:var(--accent-amber); display:block; margin-bottom:0.4rem;">${m.away_team || "Deplasman"} (Dış Saha)</strong>
                             <div style="font-size:0.82rem; color:#fff; margin-bottom:0.3rem;">Lig Sıralaması: <strong style="color:var(--accent-green); font-family:var(--font-code);">${td.away_rank || m.away_rank || '-'}</strong></div>
-                            <div style="font-size:0.8rem; color:var(--text-sub); margin-bottom:0.4rem;">Puan: <strong style="color:#fff;">${td.away_points || m.away_points || '15 Puan'}</strong></div>
+                            <div style="font-size:0.8rem; color:var(--text-sub); margin-bottom:0.3rem;">Dış Saha Gol Atma: <strong style="color:#fff;">${aStats.away_gf_avg || 1.1} Gol</strong></div>
+                            <div style="font-size:0.8rem; color:var(--text-sub); margin-bottom:0.4rem;">Dış Saha Gol Yeme: <strong style="color:#fff;">${aStats.away_ga_avg || 1.5} Gol</strong></div>
                             <div>Son 5 Maç: <span>${renderForm(td.away_form || m.away_form)}</span></div>
                         </div>
                     </div>
