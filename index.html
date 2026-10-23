@@ -341,9 +341,10 @@
             border-color: var(--accent-green);
         }
 
+        /* BÜLTEN TABLOSU - SADE & ODAKLI GRID */
         .match-list-header {
             display: grid;
-            grid-template-columns: 100px 105px 1.4fr 2fr 130px 140px;
+            grid-template-columns: 85px 105px 1.3fr 1.9fr 1.6fr 120px;
             gap: 1rem;
             padding: 0.85rem 1.4rem;
             font-size: 0.75rem;
@@ -356,7 +357,7 @@
 
         .match-row {
             display: grid;
-            grid-template-columns: 100px 105px 1.4fr 2fr 130px 140px;
+            grid-template-columns: 85px 105px 1.3fr 1.9fr 1.6fr 120px;
             gap: 1rem;
             align-items: center;
             background: #1e293b;
@@ -377,7 +378,7 @@
             background: rgba(255, 51, 102, 0.05);
         }
 
-        .matchup-container { display: flex; align-items: center; gap: 0.6rem; font-weight: 800; font-size: 1.05rem; flex-wrap: wrap; }
+        .matchup-container { display: flex; align-items: center; gap: 0.6rem; font-weight: 800; font-size: 1.02rem; }
         .vs-badge { background: #0f172a; border: 1px solid var(--border-line); color: var(--accent-cyan); font-size: 0.7rem; font-family: var(--font-code); padding: 2px 7px; border-radius: 6px; font-weight: 900; }
         
         .badge-live-score {
@@ -396,7 +397,7 @@
             box-shadow: 0 0 10px rgba(255, 51, 102, 0.3);
         }
 
-        .badge-code { display: inline-block; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); color: var(--accent-cyan); font-family: var(--font-code); font-weight: 800; font-size: 0.85rem; padding: 5px 10px; border-radius: 8px; }
+        .badge-code { display: inline-block; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); color: var(--accent-cyan); font-family: var(--font-code); font-weight: 800; font-size: 0.85rem; padding: 5px 9px; border-radius: 8px; }
 
         .badge-time {
             display: inline-flex;
@@ -740,7 +741,7 @@
             <div>DURUM / SAAT</div>
             <div>LİG</div>
             <div>KARŞILAŞMA</div>
-            <div id="col-header-rank">LİG SIRASI / BAREM</div>
+            <div>ALGORİTMİK TERCİH</div>
             <div style="text-align: right;">ANALİZ</div>
         </div>
 
@@ -1111,16 +1112,13 @@
 
         const btnF = document.getElementById('btn-sport-football');
         const btnB = document.getElementById('btn-sport-basketball');
-        const colHeader = document.getElementById('col-header-rank');
 
         if (sport === 'football') {
             btnF.className = 'btn-sport-tab active';
             btnB.className = 'btn-sport-tab';
-            colHeader.innerText = 'LİG SIRASI';
         } else {
             btnF.className = 'btn-sport-tab';
             btnB.className = 'btn-sport-tab active-basketball';
-            colHeader.innerText = 'İDDAA BAREMİ';
         }
 
         buildDateTabs();
@@ -1141,10 +1139,10 @@
             document.getElementById("sniper-match").innerText = s.match || "";
             document.getElementById("sniper-league").innerText = s.league || "Futbol";
             document.getElementById("sniper-time").innerText = (s.date || "").split(" ")[1] || "TSİ";
-            document.getElementById("sniper-conf").innerText = s.confidence || 88;
+            document.getElementById("sniper-conf").innerText = s.confidence || 86;
             document.getElementById("sniper-reason").innerText = s.reason || "";
             document.getElementById("sniper-pick").innerText = s.pick || "2.5 ÜST";
-            document.getElementById("sniper-odd").innerText = `${s.fair_odd || 1.45} ₺`;
+            document.getElementById("sniper-odd").innerText = `${s.fair_odd || 1.55} ₺`;
         });
     }
 
@@ -1706,7 +1704,6 @@
             return true;
         });
 
-        // MAÇLARI KRONOLOJİK VE CANLI DURUMUNA GÖRE SIRALA
         filtered.sort((a, b) => {
             if (a.is_live && !b.is_live) return -1;
             if (!a.is_live && b.is_live) return 1;
@@ -1744,33 +1741,34 @@
                 ? `<span class="badge-live-score">${liveScoreDisplay}</span>` 
                 : `<span class="vs-badge">VS</span>`;
 
-            // Sağdaki Bilgi Rozeti
-            let badgeInfoHtml = '';
+            // ALGORİTMİK TERCİH SÜTUNU (TEMİZ & NET KARAR ALANI)
+            let pickBlockHtml = '';
             if (isBasketball) {
                 const bLine = m.analysis?.total_line || 164.5;
-                badgeInfoHtml = `<span style="background:rgba(251,146,60,0.12); border:1px solid rgba(251,146,60,0.3); color:var(--accent-orange); padding:4px 10px; border-radius:8px; font-size:0.75rem; font-weight:800; font-family:var(--font-code);">Bar: ${bLine}</span>`;
+                const bPick = m.strongest_pick || `${bLine} ÜST`;
+                pickBlockHtml = `
+                    <div style="display: flex; flex-direction: column; gap: 3px;">
+                        <span style="background: rgba(251,146,60,0.12); border: 1px solid rgba(251,146,60,0.35); color: var(--accent-orange); padding: 4px 9px; border-radius: 8px; font-weight: 800; font-size: 0.8rem; font-family: var(--font-code); display: inline-block; width: fit-content;">
+                            ${bPick}
+                        </span>
+                        <span style="color: var(--text-sub); font-size: 0.7rem; font-family: var(--font-code); font-weight: 700;">Baremi: ${bLine}</span>
+                    </div>
+                `;
             } else {
-                const td = m.team_details || {};
-                const hRank = td.home_rank || m.home_rank || m.home_pos;
-                const aRank = td.away_rank || m.away_rank || m.away_pos;
-                let rankText = m.league_rank || m.rank_display || m.standing;
-                if (!rankText || rankText === 'Fikstür') {
-                    if (hRank && aRank && hRank !== '-' && aRank !== '-') {
-                        rankText = `${hRank}. vs ${aRank}.`;
-                    } else {
-                        rankText = 'Fikstür';
-                    }
+                const pickText = m.strongest_pick || '2.5 ÜST (%58)';
+                let valueHtml = '';
+                if (m.is_value && m.value_data) {
+                    valueHtml = `<span style="color: var(--accent-green); font-size: 0.72rem; font-family: var(--font-code); font-weight: 800; display: inline-flex; align-items: center; gap: 3px;"><i class="fa-solid fa-bolt"></i> +%${m.value_data.edge} Piyasa Değeri</span>`;
                 }
-                badgeInfoHtml = `<span style="background:#0f172a; border:1px solid var(--border-line); color:var(--accent-green); padding:4px 10px; border-radius:8px; font-size:0.75rem; font-weight:800; font-family:var(--font-code);">${rankText}</span>`;
-            }
 
-            // VALUE VE SNIPER ROZETLERİ
-            let tagBadges = '';
-            if (m.is_sniper) {
-                tagBadges += `<span style="background:rgba(245,158,11,0.18); border:1px solid var(--accent-amber); color:var(--accent-amber); font-size:0.7rem; font-weight:900; padding:2px 7px; border-radius:6px; font-family:var(--font-code); margin-left:6px;"><i class="fa-solid fa-bullseye"></i> SNIPER</span>`;
-            }
-            if (m.is_value && m.value_data) {
-                tagBadges += `<span style="background:rgba(0,255,136,0.14); border:1px solid var(--accent-green); color:var(--accent-green); font-size:0.7rem; font-weight:900; padding:2px 7px; border-radius:6px; font-family:var(--font-code); margin-left:6px;"><i class="fa-solid fa-bolt"></i> +%${m.value_data.edge} VALUE</span>`;
+                pickBlockHtml = `
+                    <div style="display: flex; flex-direction: column; gap: 3px;">
+                        <span style="background: rgba(0,255,136,0.1); border: 1px solid rgba(0,255,136,0.3); color: var(--accent-green); padding: 4px 9px; border-radius: 8px; font-weight: 800; font-size: 0.82rem; font-family: var(--font-code); display: inline-block; width: fit-content;">
+                            ${pickText}
+                        </span>
+                        ${valueHtml}
+                    </div>
+                `;
             }
 
             const row = document.createElement('div');
@@ -1792,10 +1790,9 @@
                     <span>${hTeam} ${hReds > 0 ? '<span class="card-red-indicator">🟥</span>' : ''}</span>
                     ${badgeMiddleHtml}
                     <span>${aTeam} ${aReds > 0 ? '<span class="card-red-indicator">🟥</span>' : ''}</span>
-                    ${tagBadges}
                 </div>
-                <div>${badgeInfoHtml}</div>
-                <div style="text-align:right;"><span class="btn-report-action"><i class="fa-solid fa-chart-pie"></i> Raporu Aç</span></div>
+                <div>${pickBlockHtml}</div>
+                <div style="text-align:right;"><span class="btn-report-action"><i class="fa-solid fa-chart-pie"></i> Rapor</span></div>
             `;
             container.appendChild(row);
         });
@@ -1845,7 +1842,6 @@
         }
 
         if (isBasketball) {
-            // BASKETBOL RAPORU
             modalBody.innerHTML = `
                 ${valueModalBanner}
                 <div class="card-panel">
@@ -1895,7 +1891,6 @@
                 </div>
             `;
         } else {
-            // FUTBOL RAPORU
             const renderForm = arr => (arr || ['G','B','G','M','G']).map(x => `<span class="form-badge form-${x}">${x}</span>`).join('');
             modalBody.innerHTML = `
                 ${valueModalBanner}
@@ -2012,6 +2007,6 @@
 </html>
 ```<ElicitationsGroup>
 <FollowUp>
-Kodu kopyalayıp GitHub'daki `index.html` dosyasına kaydettikten sonra Yönetici Masası'na girip test raporunu ekranda görebildiniz mi?
+`index.html` dosyasını güncelledikten sonra GitHub Actions'taki ana analiz iş akışını (veya `run_backtest.yml` testini) çalıştırıp yeni sade bülten görünümünü test edelim mi?
 </FollowUp>
 </ElicitationsGroup>
