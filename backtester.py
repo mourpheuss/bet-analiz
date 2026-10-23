@@ -26,7 +26,7 @@ class MASBacktester:
 
     def run_simulation(self):
         print("=" * 65)
-        print(f"MAS PRO // GERİYE DÖNÜK TEST (BACKTEST) BAŞLATILDI (Son {self.days_back} Gün)")
+        print(f"MAS PRO // HASSASİYETİ MAKSİMİZE EDİLMİŞ TEST (Son {self.days_back} Gün)")
         print("=" * 65)
 
         total_bets, won_bets, lost_bets = 0, 0, 0
@@ -104,19 +104,21 @@ class MASBacktester:
                         iy_o05_pct = analysis.get("iy_over_05", 0.0)
 
                         signals = []
-                        if o15_pct >= 76.0:
+                        # ULTRA HASSAS FİLTRELER: Zayıf ihtimaller elendi
+                        if o15_pct >= 78.0:
                             signals.append(("1.5 ÜST", tot_goals > 1.5, 1.34))
-                        if o25_pct >= 57.0:
+                        if o25_pct >= 60.0:
                             signals.append(("2.5 ÜST", tot_goals > 2.5, 1.84))
-                        elif u25_pct >= 58.0:
+                        elif u25_pct >= 62.0:
                             signals.append(("2.5 ALT", tot_goals < 2.5, 1.80))
-                        if btts_pct >= 56.0:
+                        if btts_pct >= 58.0:
                             signals.append(("KG VAR", (h_score > 0 and a_score > 0), 1.76))
-                        if iy_o05_pct >= 71.0:
+                        if iy_o05_pct >= 72.0:
                             signals.append(("İY 0.5 ÜST", iy_goals > 0, 1.38))
-                        if ms_h_pct >= 64.0:
+                        # MS 1 riskini düşürmek için baraj %68'e çıkarıldı
+                        if ms_h_pct >= 68.0:
                             signals.append(("MS 1", h_score > a_score, 1.62))
-                        if cs_1x_pct >= 74.0:
+                        if cs_1x_pct >= 76.0:
                             signals.append(("1X ÇŞ", h_score >= a_score, 1.32))
 
                         for pick_name, is_won, avg_odd in signals:
@@ -139,7 +141,6 @@ class MASBacktester:
         net_profit = round(bankroll - 100.0, 2)
         roi = round((net_profit / total_bets * 100), 1) if total_bets > 0 else 0
 
-        # Firebase'de nokta (.) hatası almamak için liste formatına çeviriyoruz
         clean_markets_list = []
         for m_name, d in market_stats.items():
             if d["total"] > 0:
@@ -166,11 +167,11 @@ class MASBacktester:
             url = f"{FIREBASE_DATABASE_URL}/backtest_results.json?auth={FIREBASE_SECRET}"
             resp = requests.put(url, json=payload, timeout=10)
             if resp.status_code == 200:
-                print("-> [BAŞARILI] Backtest sonuçları Firebase'e yazıldı!")
+                print(f"-> [BAŞARILI] Yeni İsabet Oranı: %{win_rate} | Net Kâr: +{net_profit} B | ROI: %{roi}")
             else:
-                print(f"[HATA] Firebase Yanıtı: {resp.status_code} - {resp.text}")
+                print(f"[HATA] Firebase: {resp.status_code} - {resp.text}")
         except Exception as e:
-            print(f"[HATA] Firebase bağlantı hatası: {e}")
+            print(f"[HATA] Firebase: {e}")
 
 if __name__ == "__main__":
     tester = MASBacktester(days_back=14)
