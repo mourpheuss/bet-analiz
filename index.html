@@ -377,7 +377,7 @@
             background: rgba(255, 51, 102, 0.05);
         }
 
-        .matchup-container { display: flex; align-items: center; gap: 0.6rem; font-weight: 800; font-size: 1.05rem; }
+        .matchup-container { display: flex; align-items: center; gap: 0.6rem; font-weight: 800; font-size: 1.05rem; flex-wrap: wrap; }
         .vs-badge { background: #0f172a; border: 1px solid var(--border-line); color: var(--accent-cyan); font-size: 0.7rem; font-family: var(--font-code); padding: 2px 7px; border-radius: 6px; font-weight: 900; }
         
         .badge-live-score {
@@ -669,6 +669,42 @@
             </div>
         </div>
 
+        <!-- GÜNÜN SNIPER TERCİHİ (TEK VURUŞ) -->
+        <div id="sniper-section" style="margin-bottom: 1.5rem; display: none;">
+            <div style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(15, 23, 42, 0.95) 100%); border: 2px solid var(--accent-amber); border-radius: 20px; padding: 1.4rem; box-shadow: 0 0 30px rgba(245, 158, 11, 0.2); position: relative; overflow: hidden;">
+                <div style="position: absolute; right: -15px; top: -15px; opacity: 0.08; font-size: 8rem; color: var(--accent-amber); pointer-events: none;">
+                    <i class="fa-solid fa-crosshairs"></i>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.8rem; margin-bottom: 0.8rem;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="background: var(--accent-amber); color: #000; font-size: 0.75rem; font-weight: 900; padding: 4px 10px; border-radius: 8px; letter-spacing: 0.5px;">
+                            <i class="fa-solid fa-bullseye"></i> GÜNÜN SNIPER'I
+                        </span>
+                        <span id="sniper-league" style="color: var(--text-sub); font-size: 0.8rem; font-weight: 700;">Lig</span>
+                        <span id="sniper-time" style="color: var(--accent-cyan); font-family: var(--font-code); font-size: 0.8rem; font-weight: 700;">--:--</span>
+                    </div>
+                    <span style="background: rgba(0, 255, 136, 0.12); color: var(--accent-green); border: 1px solid rgba(0, 255, 136, 0.3); font-size: 0.78rem; font-weight: 800; padding: 4px 10px; border-radius: 8px; font-family: var(--font-code);">
+                        <i class="fa-solid fa-shield-halved"></i> Güven Skoru: %<span id="sniper-conf">--</span>
+                    </span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                    <div>
+                        <h3 id="sniper-match" style="font-size: 1.4rem; font-weight: 900; color: #fff; margin-bottom: 0.3rem;">Ev Sahibi vs Deplasman</h3>
+                        <p id="sniper-reason" style="font-size: 0.82rem; color: #cbd5e1; margin: 0; line-height: 1.4;">Matematiksel model analizi</p>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div style="text-align: right;">
+                            <span style="font-size: 0.7rem; color: var(--text-sub); display: block; text-transform: uppercase; font-weight: 800;">Adil Oran Tabanı</span>
+                            <strong id="sniper-odd" style="font-family: var(--font-code); color: var(--accent-cyan); font-size: 1.25rem;">1.45</strong>
+                        </div>
+                        <div style="background: var(--accent-green); color: #060911; padding: 0.8rem 1.4rem; border-radius: 14px; font-weight: 900; font-size: 1.15rem; font-family: var(--font-code); box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);">
+                            <span id="sniper-pick">2.5 ÜST (%68)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- GÜNÜN ALGORİTMİK KUPONLARI VİTRİNİ -->
         <div id="coupons-section" style="margin-bottom: 2rem; display: none;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
@@ -793,7 +829,6 @@
             <button onclick="closeModal('modal-payment')" style="background:transparent; border:none; color:#fff; font-size: 1.5rem; cursor:pointer;">&times;</button>
         </div>
 
-        <!-- FİYAT BİLGİSİ KARTI -->
         <div style="background: linear-gradient(135deg, rgba(0, 255, 136, 0.12), rgba(56, 189, 248, 0.08)); border: 1px solid rgba(0, 255, 136, 0.35); border-radius: 14px; padding: 14px 16px; margin-bottom: 1.2rem; display: flex; justify-content: space-between; align-items: center;">
             <div>
                 <span style="font-size: 0.72rem; text-transform: uppercase; color: var(--text-sub); font-weight: 800; letter-spacing: 0.5px; display: block;">Abonelik Paketi</span>
@@ -811,7 +846,6 @@
             VIP üyelik aktivasyonunuzun anında tamamlanabilmesi için tutarı aşağıdaki şirket hesabımıza gönderiniz.
         </p>
 
-        <!-- ALICI ADI / ŞİRKET ÜNVANI -->
         <div class="mas-copy-box">
             <div class="mas-copy-info">
                 <span class="label">Alıcı / Şirket Ünvanı</span>
@@ -823,7 +857,6 @@
             </button>
         </div>
 
-        <!-- IBAN BİLGİSİ -->
         <div class="mas-copy-box">
             <div class="mas-copy-info">
                 <span class="label">IBAN Numarası</span>
@@ -941,7 +974,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let currentSport = 'football'; // 'football' veya 'basketball'
+    let currentSport = 'football';
     let allFootballMatches = [];
     let allBasketballMatches = [];
     let currentSearch = '';
@@ -1002,6 +1035,7 @@
             document.getElementById('view-terminal').classList.remove('hidden');
             loadMatches();
             loadDailyCoupons();
+            loadDailySniper();
         }
         if (view === 'admin') {
             document.getElementById('view-admin').classList.remove('hidden');
@@ -1031,6 +1065,27 @@
 
         buildDateTabs();
         renderMatches();
+    }
+
+    function loadDailySniper() {
+        const sec = document.getElementById("sniper-section");
+        if (!sec) return;
+
+        db.ref("daily_sniper").on("value", snap => {
+            const s = snap.val();
+            if (!s) {
+                sec.style.display = "none";
+                return;
+            }
+            sec.style.display = "block";
+            document.getElementById("sniper-match").innerText = s.match || "";
+            document.getElementById("sniper-league").innerText = s.league || "Futbol";
+            document.getElementById("sniper-time").innerText = (s.date || "").split(" ")[1] || "TSİ";
+            document.getElementById("sniper-conf").innerText = s.confidence || 88;
+            document.getElementById("sniper-reason").innerText = s.reason || "";
+            document.getElementById("sniper-pick").innerText = s.pick || "2.5 ÜST";
+            document.getElementById("sniper-odd").innerText = `${s.fair_odd || 1.45} ₺`;
+        });
     }
 
     function loadDailyCoupons() {
@@ -1399,7 +1454,6 @@
     }
 
     function loadMatches() {
-        // Futbol Dinleyicisi
         db.ref("analyzed_matches").on("value", snap => {
             const raw = snap.val();
             allFootballMatches = raw ? (Array.isArray(raw) ? raw : Object.values(raw)) : [];
@@ -1411,7 +1465,6 @@
             }
         });
 
-        // Basketbol Dinleyicisi
         db.ref("analyzed_basketball_matches").on("value", snap => {
             const raw = snap.val();
             allBasketballMatches = raw ? (Array.isArray(raw) ? raw : Object.values(raw)) : [];
@@ -1442,14 +1495,12 @@
             if (d) dateMap[d] = (dateMap[d] || 0) + 1;
         });
 
-        // Tüm Maçlar
         const allBtn = document.createElement('button');
         allBtn.className = `date-pill ${selectedDateFilter === 'all' ? 'active' : ''}`;
         allBtn.innerHTML = `Tüm Maçlar (${activeList.length})`;
         allBtn.onclick = () => selectDateFilter('all');
         container.appendChild(allBtn);
 
-        // Bugün
         const todayCount = dateMap[todayTsi] || 0;
         const todayBtn = document.createElement('button');
         todayBtn.className = `date-pill ${selectedDateFilter === todayTsi ? 'active' : ''}`;
@@ -1457,7 +1508,6 @@
         todayBtn.onclick = () => selectDateFilter(todayTsi);
         container.appendChild(todayBtn);
 
-        // Yarın
         const tomCount = dateMap[tomTsi] || 0;
         const tomBtn = document.createElement('button');
         tomBtn.className = `date-pill ${selectedDateFilter === tomTsi ? 'active' : ''}`;
@@ -1465,7 +1515,6 @@
         tomBtn.onclick = () => selectDateFilter(tomTsi);
         container.appendChild(tomBtn);
 
-        // Gelecek Günler
         const allDates = Object.keys(dateMap).sort();
         allDates.forEach(dateStr => {
             if (dateStr === todayTsi || dateStr === tomTsi) return;
@@ -1518,13 +1567,12 @@
             }
             return true;
         });
+
         // MAÇLARI KRONOLOJİK VE CANLI DURUMUNA GÖRE SIRALA
         filtered.sort((a, b) => {
-            // 1. Canlı maçlar her zaman en üstte yer alır
             if (a.is_live && !b.is_live) return -1;
             if (!a.is_live && b.is_live) return 1;
 
-            // 2. Ardından saat sırasına göre artan sıralanır (18:00 -> 19:30 -> 20:30 -> 23:00)
             const dateA = a.date || '';
             const dateB = b.date || '';
             return dateA.localeCompare(dateB);
@@ -1558,7 +1606,7 @@
                 ? `<span class="badge-live-score">${liveScoreDisplay}</span>` 
                 : `<span class="vs-badge">VS</span>`;
 
-            // Sağdaki Bilgi Rozeti (Futbol için sıra, basketbol için barem)
+            // Sağdaki Bilgi Rozeti
             let badgeInfoHtml = '';
             if (isBasketball) {
                 const bLine = m.analysis?.total_line || 164.5;
@@ -1576,6 +1624,15 @@
                     }
                 }
                 badgeInfoHtml = `<span style="background:#0f172a; border:1px solid var(--border-line); color:var(--accent-green); padding:4px 10px; border-radius:8px; font-size:0.75rem; font-weight:800; font-family:var(--font-code);">${rankText}</span>`;
+            }
+
+            // VALUE VE SNIPER ROZETLERİ
+            let tagBadges = '';
+            if (m.is_sniper) {
+                tagBadges += `<span style="background:rgba(245,158,11,0.18); border:1px solid var(--accent-amber); color:var(--accent-amber); font-size:0.7rem; font-weight:900; padding:2px 7px; border-radius:6px; font-family:var(--font-code); margin-left:6px;"><i class="fa-solid fa-bullseye"></i> SNIPER</span>`;
+            }
+            if (m.is_value && m.value_data) {
+                tagBadges += `<span style="background:rgba(0,255,136,0.14); border:1px solid var(--accent-green); color:var(--accent-green); font-size:0.7rem; font-weight:900; padding:2px 7px; border-radius:6px; font-family:var(--font-code); margin-left:6px;"><i class="fa-solid fa-bolt"></i> +%${m.value_data.edge} VALUE</span>`;
             }
 
             const row = document.createElement('div');
@@ -1597,6 +1654,7 @@
                     <span>${hTeam} ${hReds > 0 ? '<span class="card-red-indicator">🟥</span>' : ''}</span>
                     ${badgeMiddleHtml}
                     <span>${aTeam} ${aReds > 0 ? '<span class="card-red-indicator">🟥</span>' : ''}</span>
+                    ${tagBadges}
                 </div>
                 <div>${badgeInfoHtml}</div>
                 <div style="text-align:right;"><span class="btn-report-action"><i class="fa-solid fa-chart-pie"></i> Raporu Aç</span></div>
@@ -1627,9 +1685,31 @@
 
         const modalBody = document.getElementById('rep-modal-dynamic-body');
         
+        // VALUE (+EV) BİLGİ KARTI
+        let valueModalBanner = '';
+        if (m.is_value && m.value_data) {
+            valueModalBanner = `
+                <div style="background: rgba(0, 255, 136, 0.12); border: 1px solid var(--accent-green); border-radius: 14px; padding: 0.9rem 1.2rem; margin-bottom: 1.2rem; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <span style="font-size: 0.72rem; color: var(--accent-green); font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px;">
+                            <i class="fa-solid fa-bolt"></i> PİYASA DEĞERİ (+EV VALUE DEDEKTÖRÜ)
+                        </span>
+                        <strong style="display: block; font-size: 1rem; color: #fff; margin-top: 2px;">
+                            Önerilen Açık: ${m.value_data.market} (+%${m.value_data.edge} Matematiksel Üstünlük)
+                        </strong>
+                    </div>
+                    <div style="text-align: right;">
+                        <span style="font-size: 0.7rem; color: var(--text-sub); display: block;">Adil Oran Tabanı</span>
+                        <strong style="color: var(--accent-cyan); font-family: var(--font-code); font-size: 1.15rem;">${m.value_data.fair_odd} ₺</strong>
+                    </div>
+                </div>
+            `;
+        }
+
         if (isBasketball) {
-            // BASKETBOL ÖZEL ANALİZ RAPORU
+            // BASKETBOL RAPORU
             modalBody.innerHTML = `
+                ${valueModalBanner}
                 <div class="card-panel">
                     <h4 style="font-size:0.75rem; color:var(--text-sub); text-transform:uppercase; font-weight:800; margin-bottom:0.8rem;">
                         <i class="fa-solid fa-basketball"></i> Sayı Beklentisi & Handikap Farkı
@@ -1677,9 +1757,10 @@
                 </div>
             `;
         } else {
-            // FUTBOL ÖZEL ANALİZ RAPORU
+            // FUTBOL RAPORU
             const renderForm = arr => (arr || ['G','B','G','M','G']).map(x => `<span class="form-badge form-${x}">${x}</span>`).join('');
             modalBody.innerHTML = `
+                ${valueModalBanner}
                 <div class="card-panel">
                     <h4 style="font-size:0.75rem; color:var(--text-sub); text-transform:uppercase; font-weight:800; margin-bottom:0.85rem;">
                         <i class="fa-solid fa-table-list"></i> Puan Durumu & Son 5 Maçlık Form
