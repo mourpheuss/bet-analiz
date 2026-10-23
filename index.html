@@ -1813,7 +1813,6 @@
 
     function openReportModal(m) {
         const a = m.analysis || {};
-        const td = m.team_details || {};
         const hStats = m.home_stats || {};
         const aStats = m.away_stats || {};
         const isBasketball = (m.sport === 'basketball' || currentSport === 'basketball');
@@ -1846,6 +1845,9 @@
                         <strong style="display: block; font-size: 1rem; color: #fff; margin-top: 2px;">
                             ${m.value_data.market} (+%${m.value_data.edge} Üstünlük) • Önerilen Kasa: <span style="color:var(--accent-cyan); font-family:var(--font-code);">%${m.value_data.kelly_stake || 2.5}</span>
                         </strong>
+                        <span style="font-size: 0.72rem; color: var(--text-sub); display:block; margin-top:3px;">
+                            (Örn: 1.000 ₺ Kasanız varsa bu maça yatırılacak tutar: <strong>${((m.value_data.kelly_stake || 2.5) * 10).toFixed(0)} ₺</strong>)
+                        </span>
                     </div>
                     <div style="text-align: right;">
                         <span style="font-size: 0.7rem; color: var(--text-sub); display: block;">Adil Oran Tabanı</span>
@@ -1905,7 +1907,10 @@
                 </div>
             `;
         } else {
-            const renderForm = arr => (arr || ['G','B','G','M','G']).map(x => `<span class="form-badge form-${x}">${x}</span>`).join('');
+            const hFormArr = hStats.form || m.home_form || ['G', 'B', 'M', 'G', 'B'];
+            const aFormArr = aStats.form || m.away_form || ['M', 'B', 'M', 'G', 'M'];
+            const renderForm = arr => arr.map(x => `<span class="form-badge form-${x}">${x}</span>`).join('');
+
             modalBody.innerHTML = `
                 ${valueModalBanner}
                 <div class="card-panel">
@@ -1915,17 +1920,17 @@
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
                         <div style="background:#1e293b; padding:0.8rem; border-radius:10px; border:1px solid var(--border-line);">
                             <strong style="color:var(--accent-cyan); display:block; margin-bottom:0.4rem;">${m.home_team || "Ev Sahibi"} (İç Saha)</strong>
-                            <div style="font-size:0.82rem; color:#fff; margin-bottom:0.3rem;">Lig Sıralaması: <strong style="color:var(--accent-green); font-family:var(--font-code);">${td.home_rank || m.home_rank || '-'}</strong></div>
+                            <div style="font-size:0.82rem; color:#fff; margin-bottom:0.3rem;">Lig Sıralaması: <strong style="color:var(--accent-green); font-family:var(--font-code);">${hStats.rank || m.home_rank || '-'}</strong></div>
                             <div style="font-size:0.8rem; color:var(--text-sub); margin-bottom:0.3rem;">İç Saha Gol Atma: <strong style="color:#fff;">${hStats.home_gf_avg || 1.6} Gol</strong></div>
                             <div style="font-size:0.8rem; color:var(--text-sub); margin-bottom:0.4rem;">İç Saha Gol Yeme: <strong style="color:#fff;">${hStats.home_ga_avg || 1.1} Gol</strong></div>
-                            <div>Son 5 Maç: <span>${renderForm(td.home_form || m.home_form)}</span></div>
+                            <div>Son 5 Maç: <span>${renderForm(hFormArr)}</span></div>
                         </div>
                         <div style="background:#1e293b; padding:0.8rem; border-radius:10px; border:1px solid var(--border-line);">
                             <strong style="color:var(--accent-amber); display:block; margin-bottom:0.4rem;">${m.away_team || "Deplasman"} (Dış Saha)</strong>
-                            <div style="font-size:0.82rem; color:#fff; margin-bottom:0.3rem;">Lig Sıralaması: <strong style="color:var(--accent-green); font-family:var(--font-code);">${td.away_rank || m.away_rank || '-'}</strong></div>
+                            <div style="font-size:0.82rem; color:#fff; margin-bottom:0.3rem;">Lig Sıralaması: <strong style="color:var(--accent-green); font-family:var(--font-code);">${aStats.rank || m.away_rank || '-'}</strong></div>
                             <div style="font-size:0.8rem; color:var(--text-sub); margin-bottom:0.3rem;">Dış Saha Gol Atma: <strong style="color:#fff;">${aStats.away_gf_avg || 1.1} Gol</strong></div>
                             <div style="font-size:0.8rem; color:var(--text-sub); margin-bottom:0.4rem;">Dış Saha Gol Yeme: <strong style="color:#fff;">${aStats.away_ga_avg || 1.5} Gol</strong></div>
-                            <div>Son 5 Maç: <span>${renderForm(td.away_form || m.away_form)}</span></div>
+                            <div>Son 5 Maç: <span>${renderForm(aFormArr)}</span></div>
                         </div>
                     </div>
                 </div>
