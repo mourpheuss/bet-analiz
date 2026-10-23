@@ -2,23 +2,17 @@ import math
 
 class SportsAnalyticsEngine:
     def __init__(self):
-        # Dixon-Coles düşük skor bağımlılık parametresi (Dünya futbolu medyan değeri)
+        # Dixon-Coles düşük skor bağımlılık parametresi
         self.rho = -0.11
-        # Yarı gol dağılım katsayıları
         self.first_half_ratio = 0.44
         self.second_half_ratio = 0.56
 
     def _poisson_pmf(self, k, lambd):
-        """Temel Poisson Olasılık Kütle Fonksiyonu: P(X=k) = (lambda^k * e^-lambda) / k!"""
         if lambd <= 0:
             return 1.0 if k == 0 else 0.0
         return (math.pow(lambd, k) * math.exp(-lambd)) / math.factorial(k)
 
     def _dixon_coles_tau(self, x, y, lambda_val, mu_val):
-        """
-        Dixon & Coles (1997) Düşük Skor Düzeltme Matrisi
-        0-0, 1-0, 0-1 ve 1-1 skorlarının gerçek dünya korelasyonunu ayarlar.
-        """
         if x == 0 and y == 0:
             return max(0.0, 1.0 - (lambda_val * mu_val * self.rho))
         elif x == 0 and y == 1:
@@ -31,7 +25,6 @@ class SportsAnalyticsEngine:
             return 1.0
 
     def _build_dixon_coles_matrix(self, lambda_home, lambda_away, max_goals=7):
-        """Ev sahibi ve Deplasman için ortak Dixon-Coles olasılık matrisini kurar."""
         matrix = [[0.0 for _ in range(max_goals + 1)] for _ in range(max_goals + 1)]
         total_prob = 0.0
 
@@ -52,7 +45,6 @@ class SportsAnalyticsEngine:
         return matrix
 
     def _calculate_confidence_score(self, ms_h, ms_x, ms_a, total_xg):
-        """Model Entropisi ve Olasılık Keskinliği Analizi (0 - 100 arası Güven Skoru)"""
         max_outcome = max(ms_h, ms_x, ms_a)
         edge_score = (max_outcome - 33.3) * 1.85
         xg_penalty = 8.0 if (total_xg < 1.2 or total_xg > 4.4) else 0.0
@@ -61,15 +53,14 @@ class SportsAnalyticsEngine:
 
     def _detect_value_and_sniper(self, picks_data, total_xg, confidence):
         """
-        Piyasa Değer Açığı (+EV Value) ve Sniper Uygunluğunu Belirler.
+        Ölü oranları (1.04, 1.10) filtreler. Yalnızca oynanabilir oranlı (1.45 - 2.15)
+        ve gerçek piyasa açığı bulunan tercihleri Value & Sniper olarak belirler.
         """
-        # Piyasa medyan varsayılan yüzdeleri (Büroların ortalama açtığı barem tabanları)
         market_benchmarks = {
             "2.5 ÜST": 50.5,
             "2.5 ALT": 49.5,
             "KG VAR": 51.0,
             "İY 0.5 ÜST": 68.0,
-            "1.5 ÜST": 74.0,
             "1X ÇŞ": 66.0,
             "X2 ÇŞ": 60.0
         }
@@ -79,9 +70,10 @@ class SportsAnalyticsEngine:
             base_prob = market_benchmarks.get(pick_name)
             if base_prob:
                 edge = round(model_prob - base_prob, 1)
-                # Model piyasadan en az %9.5 daha yüksek ihtimal görüyorsa VALUE vardır
-                if edge >= 9.5:
-                    fair_odd = round(100.0 / model_prob, 2) if model_prob > 0 else 2.0
+                fair_odd = round(100.0 / model_prob, 2) if model_prob > 0 else 2.0
+                
+                # Değer kriteri: En az %10 model üstünlüğü ve adil oran minimum 1.45 TL
+                if edge >= 10.0 and 1.45 <= fair_odd <= 2.25:
                     value_bets.append({
                         "market": pick_name,
                         "model_prob": model_prob,
@@ -92,19 +84,17 @@ class SportsAnalyticsEngine:
         value_bets.sort(key=lambda x: x["edge"], reverse=True)
         top_value = value_bets[0] if value_bets else None
 
-        # SNIPER ADAYI KONTROLÜ (Günün Tek Vuruşu Kriterleri)
-        # 1. En az %74 olasılık
-        # 2. Minimum 80 Güven Skoru
-        # 3. Dengeli gol beklentisi (1.4 - 3.8 xG)
+        # GÜNÜN SNIPER ADAYI FİLTRESİ
+        # 1. Güven skoru >= 82
+        # 2. Oran en az 1.45, en çok 2.05 (1.04 gibi ölü oranlar kesinlikle yasak)
+        # 3. Model kazanma ihtimali >= %60
         is_sniper = False
         sniper_pick = None
 
-        if confidence >= 80 and 1.4 <= total_xg <= 3.8:
-            for p_name, p_prob in picks_data:
-                if p_prob >= 74.0:
-                    is_sniper = True
-                    sniper_pick = f"{p_name} (%{p_prob})"
-                    break
+        if top_value and confidence >= 82 and 1.4 <= total_xg <= 3.8:
+            if top_value["model_prob"] >= 60.0 and 1.45 <= top_value["fair_odd"] <= 2.05:
+                is_sniper = True
+                sniper_pick = f"{top_value['market']} (%{top_value['model_prob']})"
 
         return top_value, is_sniper, sniper_pick
 
@@ -124,7 +114,7 @@ class SportsAnalyticsEngine:
             lambda_a *= max(0.4, 1.0 - (a_reds * 0.32))
             lambda_h *= (1.0 + (a_reds * 0.22))
 
-        # 1. 90 DAKİKA DİXON-COLES MATRİSİ
+        # 90 DAKİKA MATRİSİ
         matrix_90 = self._build_dixon_coles_matrix(lambda_h, lambda_a, max_goals=7)
 
         ms_home_prob, ms_draw_prob, ms_away_prob = 0.0, 0.0, 0.0
@@ -146,7 +136,7 @@ class SportsAnalyticsEngine:
 
                 scores_list.append((f"{h}-{a}", prob))
 
-        # 2. İLK YARI (İY) DİXON-COLES MATRİSİ
+        # İLK YARI (İY) MATRİSİ
         lambda_h_iy = lambda_h * self.first_half_ratio
         lambda_a_iy = lambda_a * self.first_half_ratio
         matrix_iy = self._build_dixon_coles_matrix(lambda_h_iy, lambda_a_iy, max_goals=4)
@@ -160,7 +150,7 @@ class SportsAnalyticsEngine:
                 else: iy_away_prob += prob_iy
                 if (h + a) > 0.5: iy_o05_prob += prob_iy
 
-        # 3. İKİNCİ YARI (2Y) MATRİSİ
+        # İKİNCİ YARI (2Y) MATRİSİ
         lambda_h_2y = lambda_h * self.second_half_ratio
         lambda_a_2y = lambda_a * self.second_half_ratio
         matrix_2y = self._build_dixon_coles_matrix(lambda_h_2y, lambda_a_2y, max_goals=4)
@@ -194,45 +184,39 @@ class SportsAnalyticsEngine:
         total_xg = lambda_h + lambda_a
         confidence = self._calculate_confidence_score(ms_h_pct, ms_x_pct, ms_a_pct, total_xg)
 
-        # AKILLI TERCİH HAVUZU (Riskli %45'lik tek maçlar elendi)
+        # AKILLI TERCİH HAVUZU
         candidates = [
-            ("1X ÇŞ", cs_1x_pct, cs_1x_pct >= 74.0),
-            ("X2 ÇŞ", cs_x2_pct, cs_x2_pct >= 72.0),
-            ("İY 0.5 ÜST", iy_o05_pct, iy_o05_pct >= 71.0),
-            ("1.5 ÜST", o15_pct, o15_pct >= 76.0),
             ("2.5 ÜST", o25_pct, o25_pct >= 57.0),
             ("2.5 ALT", u25_pct, u25_pct >= 58.0),
             ("KG VAR", btts_pct, btts_pct >= 56.0),
+            ("İY 0.5 ÜST", iy_o05_pct, iy_o05_pct >= 72.0),
+            ("1X ÇŞ", cs_1x_pct, cs_1x_pct >= 75.0),
+            ("X2 ÇŞ", cs_x2_pct, cs_x2_pct >= 73.0),
             ("MS 1", ms_h_pct, ms_h_pct >= 64.0),
-            ("MS 2", ms_a_pct, ms_a_pct >= 54.0)
+            ("MS 2", ms_a_pct, ms_a_pct >= 54.0),
+            ("1.5 ÜST", o15_pct, o15_pct >= 76.0)
         ]
 
         valid_picks = [(p[0], p[1]) for p in candidates if p[2]]
         valid_picks.sort(key=lambda x: x[1], reverse=True)
+        strongest_pick = f"{valid_picks[0][0]} (%{valid_picks[0][1]})" if valid_picks else f"2.5 ÜST (%{o25_pct})"
 
-        if valid_picks:
-            strongest_pick = f"{valid_picks[0][0]} (%{valid_picks[0][1]})"
-        else:
-            strongest_pick = f"1.5 ÜST (%{o15_pct})"
-
-        # VALUE VE SNIPER ANALİZİ
+        # VALUE & SNIPER ANALİZİ
         all_market_probs = [
             ("2.5 ÜST", o25_pct),
             ("2.5 ALT", u25_pct),
             ("KG VAR", btts_pct),
             ("İY 0.5 ÜST", iy_o05_pct),
-            ("1.5 ÜST", o15_pct),
             ("1X ÇŞ", cs_1x_pct),
             ("X2 ÇŞ", cs_x2_pct)
         ]
         top_value, is_sniper, sniper_pick = self._detect_value_and_sniper(all_market_probs, total_xg, confidence)
 
-        # Volatilite Analizi
         volatility_warning = None
         if h_reds > 0 or a_reds > 0:
-            volatility_warning = f"DİKKAT: Sahada kırmızı kart var ({h_reds}K - {a_reds}K). Sayısal dengeler yeniden hesaplandı."
+            volatility_warning = f"DİKKAT: Sahada kırmızı kart var ({h_reds}K - {a_reds}K)."
         elif abs(ms_h_pct - ms_a_pct) < 5.0 and o25_pct > 56.0:
-            volatility_warning = "DENGELİ GÜÇLER: Taraf bahsi yerine gol baremleri (1.5 / 2.5 Üst) daha güvenlidir."
+            volatility_warning = "DENGELİ GÜÇLER: Taraf bahsi yerine gol baremleri tercih edilebilir."
 
         result = dict(match)
         result["confidence_score"] = confidence
@@ -240,9 +224,8 @@ class SportsAnalyticsEngine:
         result["top_scores"] = top_scores
         result["volatility_warning"] = volatility_warning
         
-        # Yeni Eşsiz Alanlar
         result["is_sniper"] = is_sniper
-        result["sniper_pick"] = sniper_pick if is_sniper else None
+        result["sniper_pick"] = sniper_pick
         result["is_value"] = bool(top_value)
         result["value_data"] = top_value
 
