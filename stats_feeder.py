@@ -4,8 +4,8 @@ import unicodedata
 
 class StatsFeeder:
     """
-    Takımların gerçek lig sıralamalarını, gol ortalamalarını ve son form grafiklerini
-    çeken ve sahte seed/hash mekanizması barındırmayan arındırılmış veri besleyici.
+    Dünyadaki tüm majör ve alt liglerin gerçek ESPN puan durumlarını,
+    gol ortalamalarını ve form grafiklerini çeken tam donanımlı veri besleyici.
     """
 
     def __init__(self):
@@ -14,15 +14,74 @@ class StatsFeeder:
         }
         self.standings_cache = {}
 
-        # Liglerin dünya standartlarındaki ortalama maç başı gol baremleri
+        # Scraper ile %100 uyumlu tam lig haritası
+        self.league_slug_map = {
+            # TÜRKİYE
+            "trendyol süper lig": "tur.1",
+            "super lig": "tur.1",
+            "trendyol 1. lig": "tur.2",
+            
+            # İNGİLTERE
+            "premier league": "eng.1",
+            "ingiltere championship": "eng.2",
+            "championship": "eng.2",
+            "ingiltere league one": "eng.3",
+            "ingiltere league two": "eng.4",
+
+            # İSPANYA
+            "la liga": "esp.1",
+            "la liga 2": "esp.2",
+
+            # İTALYA
+            "serie a": "ita.1",
+            "serie b": "ita.2",
+
+            # ALMANYA
+            "bundesliga": "ger.1",
+            "bundesliga 2": "ger.2",
+
+            # FRANSA
+            "fransa ligue 1": "fra.1",
+            "ligue 1": "fra.1",
+            "fransa ligue 2": "fra.2",
+            "ligue 2": "fra.2",
+
+            # DİĞER AVRUPA
+            "hollanda eredivisie": "ned.1",
+            "eredivisie": "ned.1",
+            "portekiz liga nos": "por.1",
+            "belçika pro league": "bel.1",
+            "iskoçya premiership": "sco.1",
+            "avusturya bundesliga": "aut.1",
+            "isviçre süper ligi": "sui.1",
+            "danimarka superliga": "den.1",
+            "yunanistan süper ligi": "gre.1",
+
+            # DÜNYA LİGLERİ
+            "suudi arabistan pro lig": "ksa.1",
+            "saudi pro league": "ksa.1",
+            "brezilya serie a": "bra.1",
+            "brezilya serie b": "bra.2",
+            "arjantin liga profesional": "arg.1",
+            "meksika liga mx": "mex.1",
+            "abd mls": "usa.1",
+            "japonya j1 league": "jpn.1"
+        }
+
+        # Liglerin dünya ortalaması gol karakterleri (Her lige özgü xG tabanı)
         self.league_baselines = {
-            "Premier League": {"home_gf": 1.62, "away_gf": 1.28},
-            "Bundesliga": {"home_gf": 1.74, "away_gf": 1.38},
+            "Premier League": {"home_gf": 1.65, "away_gf": 1.28},
+            "Bundesliga": {"home_gf": 1.78, "away_gf": 1.40},
+            "Bundesliga 2": {"home_gf": 1.68, "away_gf": 1.34},
             "Trendyol Süper Lig": {"home_gf": 1.52, "away_gf": 1.18},
-            "La Liga": {"home_gf": 1.45, "away_gf": 1.08},
+            "La Liga": {"home_gf": 1.44, "away_gf": 1.06},
             "Serie A": {"home_gf": 1.48, "away_gf": 1.12},
-            "Fransa Ligue 1": {"home_gf": 1.46, "away_gf": 1.15},
-            "Hollanda Eredivisie": {"home_gf": 1.80, "away_gf": 1.42}
+            "Fransa Ligue 1": {"home_gf": 1.46, "away_gf": 1.14},
+            "Fransa Ligue 2": {"home_gf": 1.32, "away_gf": 1.02},
+            "Hollanda Eredivisie": {"home_gf": 1.82, "away_gf": 1.44},
+            "Suudi Arabistan Pro Lig": {"home_gf": 1.62, "away_gf": 1.36},
+            "Danimarka Superliga": {"home_gf": 1.54, "away_gf": 1.26},
+            "Avusturya Bundesliga": {"home_gf": 1.60, "away_gf": 1.32}
         }
 
     def _normalize(self, text):
@@ -45,33 +104,32 @@ class StatsFeeder:
 
     def _resolve_league_slug(self, league_name):
         if not league_name: return None
-        l_low = str(league_name).lower()
+        l_low = str(league_name).strip().lower()
 
-        if "premier" in l_low: return "eng.1"
-        if "championship" in l_low: return "eng.2"
-        if "league one" in l_low: return "eng.3"
-        if "süper lig" in l_low or "super lig" in l_low: return "tur.1"
-        if "la liga" in l_low: return "esp.1"
-        if "serie a" in l_low: return "ita.1"
-        if "bundesliga" in l_low: return "ger.1"
-        if "ligue 1" in l_low: return "fra.1"
-        if "eredivisie" in l_low: return "ned.1"
-        if "liga nos" in l_low or "portekiz" in l_low: return "por.1"
+        # Doğrudan tam eşleşme kontrolü
+        if l_low in self.league_slug_map:
+            return self.league_slug_map[l_low]
+
+        # Alt kelime kontrolü
+        for k, slug in self.league_slug_map.items():
+            if k in l_low or l_low in k:
+                return slug
+
         return None
 
     def fetch_league_standings(self, league_name):
-        if league_name in self.standings_cache:
-            return self.standings_cache[league_name]
-
         slug = self._resolve_league_slug(league_name)
         if not slug:
             return {}
+
+        if slug in self.standings_cache:
+            return self.standings_cache[slug]
 
         url = f"https://site.web.api.espn.com/apis/v2/sports/soccer/{slug}/standings"
         table = {}
 
         try:
-            res = requests.get(url, headers=self.headers, timeout=5)
+            res = requests.get(url, headers=self.headers, timeout=6)
             if res.status_code == 200:
                 data = res.json()
                 entries = []
@@ -111,17 +169,20 @@ class StatsFeeder:
                     if not form_list:
                         form_list = ["G", "B", "G", "M", "G"]
 
+                    avg_scored = round(gf / played, 2) if played > 0 else 1.35
+                    avg_conceded = round(ga / played, 2) if played > 0 else 1.20
+
                     table[norm_name] = {
                         "display_name": t_name,
                         "rank": rank,
                         "points": points,
                         "played": played,
-                        "avg_scored": round(gf / played, 2),
-                        "avg_conceded": round(ga / played, 2),
+                        "avg_scored": max(0.6, avg_scored),
+                        "avg_conceded": max(0.5, avg_conceded),
                         "form": form_list
                     }
 
-                self.standings_cache[league_name] = table
+                self.standings_cache[slug] = table
         except Exception:
             pass
 
@@ -145,26 +206,26 @@ class StatsFeeder:
         h_data = self._find_team(home_team, table)
         a_data = self._find_team(away_team, table)
 
-        # Lig ortalaması tabanı
-        baseline = self.league_baselines.get(league, {"home_gf": 1.50, "away_gf": 1.15})
+        baseline = self.league_baselines.get(league, {"home_gf": 1.52, "away_gf": 1.18})
 
         # Ev Sahibi Gerçek Verileri
         if h_data:
             h_rank, h_points, h_form = h_data["rank"], h_data["points"], h_data["form"]
-            h_scored = max(0.8, h_data["avg_scored"])
-            h_conceded = max(0.6, h_data["avg_conceded"])
+            h_scored = h_data["avg_scored"]
+            h_conceded = h_data["avg_conceded"]
         else:
+            # Tabloda olmayan takımlar için lig tabanına göre dengeli varyans
             h_rank = "-"
             h_points = "-"
-            h_form = ["G", "B", "M", "G", "B"]
+            h_form = ["G", "B", "G", "M", "B"]
             h_scored = baseline["home_gf"]
             h_conceded = baseline["away_gf"]
 
         # Deplasman Gerçek Verileri
         if a_data:
             a_rank, a_points, a_form = a_data["rank"], a_data["points"], a_data["form"]
-            a_scored = max(0.6, a_data["avg_scored"])
-            a_conceded = max(0.8, a_data["avg_conceded"])
+            a_scored = a_data["avg_scored"]
+            a_conceded = a_data["avg_conceded"]
         else:
             a_rank = "-"
             a_points = "-"
@@ -172,15 +233,15 @@ class StatsFeeder:
             a_scored = baseline["away_gf"]
             a_conceded = baseline["home_gf"]
 
-        # Form Güç Çarpanı (Puan bazlı ağırlık)
+        # Form Katsayısı
         h_pts_val = sum(3 if x == 'G' else (1 if x == 'B' else 0) for x in h_form)
         a_pts_val = sum(3 if x == 'G' else (1 if x == 'B' else 0) for x in a_form)
-        h_form_boost = 1.0 + ((h_pts_val - 7.5) * 0.02)
-        a_form_boost = 1.0 + ((a_pts_val - 7.5) * 0.02)
+        h_form_boost = round(1.0 + ((h_pts_val - 7.5) * 0.022), 3)
+        a_form_boost = round(1.0 + ((a_pts_val - 7.5) * 0.022), 3)
 
-        # Bilimsel Gol Beklentisi (xG)
-        home_calc_xg = round((h_scored * a_conceded / 1.30) * 1.10 * h_form_boost, 2)
-        away_calc_xg = round((a_scored * h_conceded / 1.30) * 0.90 * a_form_boost, 2)
+        # Bilimsel xG Hesaplaması
+        home_calc_xg = round((h_scored * a_conceded / 1.30) * 1.12 * h_form_boost, 2)
+        away_calc_xg = round((a_scored * h_conceded / 1.30) * 0.88 * a_form_boost, 2)
 
         match["home_stats"] = {"rank": h_rank, "points": h_points, "form": h_form, "calc_xg": max(0.40, home_calc_xg)}
         match["away_stats"] = {"rank": a_rank, "points": a_points, "form": a_form, "calc_xg": max(0.35, away_calc_xg)}
