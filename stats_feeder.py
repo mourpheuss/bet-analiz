@@ -2,11 +2,12 @@ import requests
 import re
 import unicodedata
 import random
+from lineup_tracker import LineupTracker
 
 class StatsFeeder:
     """
-    Saf İç/Dış Saha averajlarını, ESPN'in gerçek son 5 maç formunu (displayValue)
-    ve lig yorgunluk katsayısını çeken veri besleyici.
+    Saf İç/Dış Saha averajlarını, ESPN'in displayValue formunu,
+    fikstür yorgunluk katsayısını ve ilk 11 sakatlık analizini birleştiren veri besleyici.
     """
 
     def __init__(self):
@@ -14,6 +15,7 @@ class StatsFeeder:
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
         }
         self.standings_cache = {}
+        self.lineup_tracker = LineupTracker()
 
         self.league_slug_map = {
             "trendyol süper lig": "tur.1",
@@ -97,10 +99,6 @@ class StatsFeeder:
         return None
 
     def _generate_realistic_form_from_stats(self, wins, ties, losses, rank):
-        """
-        ESPN form string vermediğinde takımın gerçek galibiyet/beraberlik/mağlubiyet
-        oranına ve ligdeki sırasına göre %100 gerçekçi bir son 5 maç serisi üretir.
-        """
         total = wins + ties + losses
         if total == 0:
             return ["G", "B", "M", "B", "G"] if rank <= 8 else ["M", "B", "M", "G", "M"]
@@ -158,7 +156,6 @@ class StatsFeeder:
                         if isinstance(s, dict) and "name" in s:
                             s_name = s["name"]
                             stats_list[s_name] = s.get("value")
-                            # Form metni ESPN'de displayValue içinde gelir
                             if s_name == "form" and s.get("displayValue"):
                                 raw_form_str = str(s.get("displayValue"))
 
@@ -184,7 +181,6 @@ class StatsFeeder:
                     away_avg_scored = round(away_gf / max(1, away_played), 2)
                     away_avg_conceded = round(away_ga / max(1, away_played), 2)
 
-                    # GERÇEK FORM ÇÖZÜMLEME
                     form_list = []
                     if raw_form_str:
                         for ch in raw_form_str.replace(",", "").upper()[:5]:
@@ -192,7 +188,6 @@ class StatsFeeder:
                             elif ch == 'D': form_list.append('B')
                             elif ch == 'L': form_list.append('M')
 
-                    # ESPN'de form yoksa takımın ligdeki gerçek karnesine göre dinamik üret
                     if not form_list:
                         form_list = self._generate_realistic_form_from_stats(wins, ties, losses, rank)
 
@@ -241,7 +236,19 @@ class StatsFeeder:
         boost = 1.0 + ((normalized_score - 1.30) * 0.12)
         return max(0.85, min(1.20, round(boost, 3)))
 
+    def _calculate_fatigue_multiplier(self, match):
+        rest_days = match.get("rest_days", 6)
+        if rest_days <= 3:
+            return 0.94, 1.04
+        elif rest_days >= 8:
+            return 1.02, 0.98
+        return 1.0, 1.0
+
     def enrich_match_data(self, match):
+        """
+        Maçı lig baselines, saf iç/dış averajlar, üstel form,
+        fikstür yorgunluğu ve ilk 11 sakatlık verileriyle zenginleştirir.
+        """
         league = match.get("league", "")
         home_team = match.get("home_team", "")
         away_team = match.get("away_team", "")
@@ -252,6 +259,7 @@ class StatsFeeder:
 
         baseline = self.league_baselines.get(league, {"home_gf": 1.52, "away_gf": 1.18})
 
+        # 1. Saf İç / Dış Saha İstatistikleri
         if h_data:
             h_rank, h_points, h_form = h_data["rank"], h_data["points"], h_data["form"]
             h_scored = h_data["home_avg_scored"]
@@ -272,11 +280,38 @@ class StatsFeeder:
             a_scored = baseline["away_gf"]
             a_conceded = baseline["home_gf"] * 1.15
 
+        # 2. Üstel Form Momentum
         h_form_boost = self._calculate_exponential_form(h_form)
         a_form_boost = self._calculate_exponential_form(a_form)
 
-        home_calc_xg = round((h_scored * a_conceded / 1.30) * 1.10 * h_form_boost, 2)
-        away_calc_xg = round((a_scored * h_conceded / 1.30) * 0.90 * a_form_boost, 2)
+        # 3. Fikstür Dinlenme Yorgunluğu
+        h_rest_atk, h_rest_def = self._calculate_fatigue_multiplier(match)
+        a_rest_atk, a_rest_def = self._calculate_fatigue_multiplier(match)
+
+        # 4. İlk 11 & Sakat/Cezalı Takip Motoru
+        slug = self._resolve_league_slug(league)
+        match_id = match.get("match_id")
+        lineup_info = self.lineup_tracker.inspect_match_lineup(slug, match_id)
+
+        # 5. Tüm Faktörlerin Dahil Edildiği Nihai xG Hesabı
+        home_calc_xg = round(
+            (h_scored * (a_conceded * a_rest_def) / 1.30)
+            * 1.10
+            * h_form_boost
+            * h_rest_atk
+            * lineup_info["home_attack_mod"]
+            * lineup_info["away_defense_mod"],
+            2
+        )
+        away_calc_xg = round(
+            (a_scored * (h_conceded * h_rest_def) / 1.30)
+            * 0.90
+            * a_form_boost
+            * a_rest_atk
+            * lineup_info["away_attack_mod"]
+            * lineup_info["home_defense_mod"],
+            2
+        )
 
         match["home_stats"] = {
             "rank": h_rank, "points": h_points, "form": h_form,
@@ -295,5 +330,6 @@ class StatsFeeder:
         match["away_points"] = a_points
         match["home_form"] = h_form
         match["away_form"] = a_form
+        match["lineup_info"] = lineup_info
 
         return match
