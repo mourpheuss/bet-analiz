@@ -7,11 +7,6 @@ FIREBASE_DATABASE_URL = "https://analizsepeti-f3bb5-default-rtdb.firebaseio.com"
 FIREBASE_SECRET = "mZUATfv3TJqO6Ap8d1asrXemQIYqJflfYLzprmBS"
 
 class MASBacktester:
-    """
-    Oynanmış ve bitmiş yüzlerce maçı ESPN üzerinden tarayarak
-    Dixon-Coles modelini, isabet oranını ve 100 Birim Kasa Getirisini test eder.
-    """
-
     def __init__(self, days_back=14):
         self.days_back = days_back
         self.engine = SportsAnalyticsEngine()
@@ -80,7 +75,6 @@ class MASBacktester:
                         a_score = int(away_c.get("score") or 0)
                         tot_goals = h_score + a_score
 
-                        # İlk yarı golü kontrolü (Linescores üzerinden)
                         h_lines = home_c.get("linescores", [])
                         a_lines = away_c.get("linescores", [])
                         if len(h_lines) > 0 and len(a_lines) > 0:
@@ -110,7 +104,6 @@ class MASBacktester:
                         iy_o05_pct = analysis.get("iy_over_05", 0.0)
 
                         signals = []
-                        # Modelin yüksek güvenle ürettiği sinyaller ve piyasa medyan oranları:
                         if o15_pct >= 76.0:
                             signals.append(("1.5 ÜST", tot_goals > 1.5, 1.34))
                         if o25_pct >= 57.0:
@@ -146,26 +139,17 @@ class MASBacktester:
         net_profit = round(bankroll - 100.0, 2)
         roi = round((net_profit / total_bets * 100), 1) if total_bets > 0 else 0
 
-        print("\n" + "=" * 65)
-        print("SIMÜLASYON RAPORU (HAKİKİ PERFORMANS)")
-        print("=" * 65)
-        print(f"Toplam Oynanan Bahis : {total_bets}")
-        print(f"Tutan Bahis (Win)     : {won_bets} (%{win_rate})")
-        print(f"Yatan Bahis (Loss)    : {lost_bets}")
-        print(f"Başlangıç Kasası      : 100.0 Birim")
-        print(f"Bitiş Kasası          : {round(bankroll, 2)} Birim")
-        print(f"Net Kâr / Zarar       : {net_profit:+} Birim (ROI: %{roi})")
-        print("-" * 65)
-        print(f"{'Piyasa / Tercih':<14} | {'Bahis':<6} | {'İsabet %':<9} | {'Net Kâr (Birim)'}")
-        print("-" * 65)
-        for m, d in market_stats.items():
+        # Firebase'de nokta (.) hatası almamak için liste formatına çeviriyoruz
+        clean_markets_list = []
+        for m_name, d in market_stats.items():
             if d["total"] > 0:
-                p_rate = round((d["won"] / d["total"] * 100), 1)
-                p_profit = round(d["profit"], 2)
-                print(f"{m:<14} | {d['total']:<6} | %{p_rate:<8} | {p_profit:+} Birim")
-        print("=" * 65)
+                clean_markets_list.append({
+                    "name": m_name,
+                    "total": d["total"],
+                    "won": d["won"],
+                    "profit": round(d["profit"], 2)
+                })
 
-        # Firebase'e Raporu Yükle
         payload = {
             "updated_at": (datetime.utcnow() + timedelta(hours=3)).strftime("%d.%m.%Y %H:%M TSİ"),
             "total_bets": total_bets,
@@ -175,15 +159,18 @@ class MASBacktester:
             "bankroll": round(bankroll, 2),
             "net_profit": net_profit,
             "roi": roi,
-            "markets": market_stats
+            "markets": clean_markets_list
         }
 
         try:
             url = f"{FIREBASE_DATABASE_URL}/backtest_results.json?auth={FIREBASE_SECRET}"
-            requests.put(url, json=payload, timeout=10)
-            print("-> [BAŞARILI] Backtest sonuçları Firebase'e yüklendi!")
+            resp = requests.put(url, json=payload, timeout=10)
+            if resp.status_code == 200:
+                print("-> [BAŞARILI] Backtest sonuçları Firebase'e yazıldı!")
+            else:
+                print(f"[HATA] Firebase Yanıtı: {resp.status_code} - {resp.text}")
         except Exception as e:
-            print(f"[HATA] Firebase yüklenemedi: {e}")
+            print(f"[HATA] Firebase bağlantı hatası: {e}")
 
 if __name__ == "__main__":
     tester = MASBacktester(days_back=14)
