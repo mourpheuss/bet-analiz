@@ -1484,25 +1484,32 @@
             if (!tbody) return;
             tbody.innerHTML = "";
 
-            const markets = data.markets || {};
-            for (const [mName, mStat] of Object.entries(markets)) {
-                if (mStat.total === 0) continue;
-                const wr = Math.round((mStat.won / mStat.total) * 100);
-                const pColor = mStat.profit >= 0 ? "var(--accent-green)" : "var(--accent-red)";
-                const pSign = mStat.profit > 0 ? "+" : "";
+            const rawMarkets = data.markets || [];
+            const marketItems = Array.isArray(rawMarkets) 
+                ? rawMarkets 
+                : Object.entries(rawMarkets).map(([k, v]) => ({ name: k, ...v }));
+
+            marketItems.forEach(item => {
+                const total = item.total || 0;
+                if (total === 0) return;
+                const won = item.won || 0;
+                const profit = item.profit || 0;
+                const wr = Math.round((won / total) * 100);
+                const pColor = profit >= 0 ? "var(--accent-green)" : "var(--accent-red)";
+                const pSign = profit > 0 ? "+" : "";
 
                 tbody.innerHTML += `
                     <tr style="border-bottom: 1px solid rgba(255,255,255,0.03);">
-                        <td style="padding: 9px 14px; font-weight: 800; color: #fff;">${mName}</td>
-                        <td style="padding: 9px 14px; font-family: var(--font-code);">${mStat.total}</td>
-                        <td style="padding: 9px 14px; font-family: var(--font-code); color: var(--accent-green);">${mStat.won}</td>
+                        <td style="padding: 9px 14px; font-weight: 800; color: #fff;">${item.name}</td>
+                        <td style="padding: 9px 14px; font-family: var(--font-code);">${total}</td>
+                        <td style="padding: 9px 14px; font-family: var(--font-code); color: var(--accent-green);">${won}</td>
                         <td style="padding: 9px 14px; font-family: var(--font-code); font-weight: 800;">%${wr}</td>
                         <td style="padding: 9px 14px; text-align: right; font-family: var(--font-code); font-weight: 800; color: ${pColor};">
-                            ${pSign}${mStat.profit.toFixed(1)} Birim
+                            ${pSign}${Number(profit).toFixed(1)} Birim
                         </td>
                     </tr>
                 `;
-            }
+            });
         });
     }
 
@@ -1820,7 +1827,6 @@
 
         const modalBody = document.getElementById('rep-modal-dynamic-body');
         
-        // VALUE (+EV) BİLGİ KARTI
         let valueModalBanner = '';
         if (m.is_value && m.value_data) {
             valueModalBanner = `
@@ -2005,8 +2011,3 @@
 </script>
 </body>
 </html>
-```<ElicitationsGroup>
-<FollowUp>
-`index.html` dosyasını güncelledikten sonra GitHub Actions'taki ana analiz iş akışını (veya `run_backtest.yml` testini) çalıştırıp yeni sade bülten görünümünü test edelim mi?
-</FollowUp>
-</ElicitationsGroup>
